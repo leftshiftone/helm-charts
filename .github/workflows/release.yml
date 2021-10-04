@@ -7,7 +7,7 @@ on:
 
 jobs:
   release:
-    runs-on: dtzar/helm-kubectl:3.7.0
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v2
