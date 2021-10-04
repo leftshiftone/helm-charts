@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "oops.fullname" . }}
+  labels:
+  {{- include "oops.labels" . | nindent 4 }}
+data:
+  {{- $jdbcUrl := printf "jdbc:postgresql://%s-postgresql:5432/%s" (include "oops.fullname" .) .Values.postgresql.postgresqlDatabase -}}
+  {{- if and (not (hasKey .Values.app.config "OOPS_JDBC_URL")) .Values.postgresql.enabled }}
+  OOPS_JDBC_URL: {{ $jdbcUrl | quote }}
+  {{- end }}
+  {{- if and (not (hasKey .Values.app.config "OOPS_JDBC_USERNAME")) .Values.postgresql.enabled }}
+  OOPS_JDBC_USERNAME: {{ .Values.postgresql.postgresqlUsername | quote }}
+  {{- end }}
+  {{- if and (not (hasKey .Values.app.config "OOPS_JDBC_PASSWORD")) .Values.postgresql.enabled .Values.postgresql.postgresqlPassword }}
+  OOPS_JDBC_PASSWORD: {{ .Values.postgresql.postgresqlPassword | quote }}
+  {{- end }}
+  {{- range $key, $val := .Values.app.config }}
+  {{ $key }}: {{ $val | quote }}
+  {{- end }}
