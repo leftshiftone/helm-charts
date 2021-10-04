@@ -7,17 +7,25 @@ on:
 
 jobs:
   release:
-    runs-on: ubuntu-latest
+    runs-on: dtzar/helm-kubectl:3.7.0
     steps:
       - name: Checkout
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
 
+      - name: Configure Helm
+        uses: hiberbee/github-action-helm@1.4.0
+        with:
+          helm-version: 3.7.0
+
       - name: Configure Git
         run: |
           git config user.name "$GITHUB_ACTOR"
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+          helm repo add bitnami https://charts.bitnami.com/bitnami
+          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+          helm repo add grafana https://grafana.github.io/helm-charts
 
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.2.1
