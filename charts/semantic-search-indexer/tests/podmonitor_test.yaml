@@ -1,0 +1,17 @@
+suite: test podmonitor
+templates:
+  - podmonitor.yaml
+tests:
+  - it: default
+    set:
+      podMonitor.enabled: true
+    asserts:
+      - isKind:
+          of: PodMonitor
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-semantic-search-indexer
+      - matchSnapshot:
+          path: metadata
+      - matchSnapshot:
+          path: spec
