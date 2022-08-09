@@ -1,0 +1,12 @@
+default:
+  1: |
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: semantic-search-searcher
+    app.kubernetes.io/version: 0.0.0
+    helm.sh/chart: semantic-search-searcher-0.0.0
+  2: |
+    ENABLE_METRICS: "true"
+    ES_URL: http://semantic-search-elasticsearch:9200
+    HTTP_LOG_LEVEL: WARNING
+    LOG_LEVEL: INFO
