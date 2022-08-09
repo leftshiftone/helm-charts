@@ -1,0 +1,138 @@
+# Default values for semantic-search-indexer.
+# This is a YAML-formatted file.
+
+app:
+  # Specifies configuration of the application
+  config:
+    # Available log levels: DEBUG, INFO, WARNING, ERROR, CRITICAL
+    LOG_LEVEL: "INFO"
+    HTTP_LOG_LEVEL: "WARNING"
+    ES_URL: "http://semantic-search-elasticsearch:9200"
+    MINIO_HOST: "semantic-search-minio:9000"
+    # MINIO_USER: admin
+    # MINIO_PASSWORD: adminadmin
+    # MINIO_IS_TLS: true
+    ENABLE_METRICS: "true"
+  # minioExistingSecret: ""
+  # minioExistingSecretKey: ""
+  waitForElasticsearch: true
+  waitForMinio: true
+
+replicaCount: 1
+
+image:
+  repository: 007098893018.dkr.ecr.eu-central-1.amazonaws.com/semantic-search-indexer
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podLabels: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: semantic-search-indexer.local
+      paths:
+        - path: /
+          port: 80
+          pathType: Prefix
+  tls: []
+  #  - secretName: semantic-search-indexer-tls
+  #    hosts:
+  #      - semantic-search-indexer.local
+
+podMonitor:
+  enabled: false
+  path: /metrics
+  port: http
+  namespace: ""
+  interval: 10s
+  additionalLabels: {}
+  additionalPodTargetLabels:
+    - application
+    - app_kubernetes_io_instance
+    - app_kubernetes_io_name
+    - app_kubernetes_io_version
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 1000m
+  #   memory: 1024Mi
+  # requests:
+  #   cpu: 500m
+  #   memory: 512Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 9
+  targetCPUUtilizationPercentage: 70
+  # targetMemoryUtilizationPercentage: 70
+
+livenessProbe:
+  httpGet:
+    path: /health
+    port: http
+readinessProbe:
+  httpGet:
+    path: /ready
+    port: http
+startupProbe:
+  httpGet:
+    path: /ready
+    port: http
+  failureThreshold: 30
+  periodSeconds: 10
+
+extraVolumeMounts: []
+  # - mountPath: /debug
+  #   name: host
+  #   readOnly: true
+extraVolumes: []
+  # - name: host
+  #   hostPath:
+  #     path: /host
+  #     type: Directory
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

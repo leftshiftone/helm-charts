@@ -1,0 +1,19 @@
+suite: test ingress
+templates:
+  - ingress.yaml
+tests:
+  - it: default
+    set:
+      ingress.enabled: "true"
+    asserts:
+      - isKind:
+          of: Ingress
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-semantic-search-indexer-app
+      - matchSnapshot:
+          path: metadata.labels
+      - matchSnapshot:
+          path: metadata.annotations
+      - matchSnapshot:
+          path: spec
