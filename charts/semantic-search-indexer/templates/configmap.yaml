@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "semantic-search-indexer.fullname" . }}
+  labels:
+  {{- include "semantic-search-indexer.labels" . | nindent 4 }}
+data:
+  # Dynamic config
+  {{- range $key, $val := .Values.app.config }}
+  {{ $key }}: {{ $val | quote }}
+  {{- end }}

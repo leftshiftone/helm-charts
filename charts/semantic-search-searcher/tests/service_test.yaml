@@ -1,0 +1,17 @@
+suite: test service
+templates:
+  - service.yaml
+tests:
+  - it: default
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-semantic-search-searcher-app
+      - matchSnapshot:
+          path: metadata.labels
+      - matchSnapshot:
+          path: metadata.annotations
+      - matchSnapshot:
+          path: spec

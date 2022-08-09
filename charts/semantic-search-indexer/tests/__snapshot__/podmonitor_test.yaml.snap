@@ -1,0 +1,28 @@
+default:
+  1: |
+    labels:
+      app.kubernetes.io/instance: RELEASE-NAME
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/name: semantic-search-indexer
+      app.kubernetes.io/version: 0.0.0
+      helm.sh/chart: semantic-search-indexer-0.0.0
+      release: RELEASE-NAME
+    name: RELEASE-NAME-semantic-search-indexer
+    namespace: NAMESPACE
+  2: |
+    namespaceSelector:
+      matchNames:
+      - NAMESPACE
+    podMetricsEndpoints:
+    - interval: 10s
+      path: /metrics
+      port: http
+    podTargetLabels:
+    - application
+    - app_kubernetes_io_instance
+    - app_kubernetes_io_name
+    - app_kubernetes_io_version
+    selector:
+      matchLabels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/name: semantic-search-indexer
