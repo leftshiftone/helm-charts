@@ -1,0 +1,18 @@
+dependencies:
+- name: semantic-search-indexer
+  repository: file://../../../indexer/build/helm/semantic-search-indexer
+  version: 0.1.0
+- name: semantic-search-searcher
+  repository: file://../../../searcher/build/helm/semantic-search-searcher
+  version: 0.1.0
+- name: elasticsearch
+  repository: https://helm.elastic.co
+  version: 7.17.3
+- name: prometheus-elasticsearch-exporter
+  repository: https://prometheus-community.github.io/helm-charts
+  version: 4.13.0
+- name: minio
+  repository: https://charts.min.io
+  version: 4.0.8
+digest: sha256:73b14c34f295c939be02f8dfa5b157599c92906a730be371af463838f6c59d07
+generated: "2022-08-09T21:01:14.181580513Z"
