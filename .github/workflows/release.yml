@@ -17,7 +17,7 @@ jobs:
       - name: Configure Helm
         uses: hiberbee/github-action-helm@1.4.0
         with:
-          helm-version: 3.7.0
+          helm-version: 3.9.2
 
       - name: Configure Git
         run: |
@@ -28,7 +28,7 @@ jobs:
           helm repo add grafana https://grafana.github.io/helm-charts
 
       - name: Run chart-releaser
-        uses: helm/chart-releaser-action@v1.2.1
+        uses: helm/chart-releaser-action@v1.4.0
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
