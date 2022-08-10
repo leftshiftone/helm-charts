@@ -1,0 +1,121 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "semantic-search-indexer.fullname" . }}-app
+  labels:
+    {{- include "semantic-search-indexer.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "semantic-search-indexer.selectorLabels" . | nindent 6 }}
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- include "semantic-search-indexer.configChecksum" . | nindent 8 }}
+      labels:
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        application: {{ include "semantic-search-indexer.name" . }}
+        {{- include "semantic-search-indexer.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "semantic-search-indexer.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- if .Values.app.waitForGrafana }}
+      initContainers:
+        {{- if .Values.app.waitForElasticsearch }}
+        - name: {{ .Chart.Name }}-elasticsarch-check
+          image: curlimages/curl:7.84.0
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - 'until curl --fail --silent --output /dev/null $ELASTICSEARCH_URL/_cluster/health; do echo "Waiting for elasticsearch to be available at $ELASTICSEARCH_URL/_cluster/health..."; sleep 3; done'
+          env:
+            - name: ELASTICSEARCH_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "semantic-search-indexer.fullname" . }}
+                  key: ES_URL
+        {{- end }}
+        {{- if .Values.app.waitForMinio }}
+        - name: {{ .Chart.Name }}-minio-check
+          image: curlimages/curl:7.84.0
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - 'until curl --fail --silent --output /dev/null http://$MINIO_HOST/minio/health/live; do echo "Waiting for elasticsearch to be available at http://$MINIO_HOST/minio/health/live..."; sleep 3; done'
+          env:
+            - name: MINIO_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "semantic-search-indexer.fullname" . }}
+                  key: MINIO_HOST
+        {{- end }}
+      {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+          startupProbe:
+            {{- toYaml .Values.startupProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "semantic-search-indexer.fullname" . }}
+          {{- if and (not .Values.app.config.MINIO_PASSWORD) .Values.app.minioExistingSecret }}
+          env:
+            - name: MINIO_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.app.minioExistingSecret }}
+                  key: {{ .Values.app.minioExistingSecretKey }}
+          {{- end }}
+          {{- if .Values.extraVolumeMounts }}
+          volumeMounts:
+            {{- toYaml .Values.extraVolumeMounts | nindent 12 }}
+          {{- end }}
+      {{- if .Values.extraVolumes }}
+      volumes:
+        {{- toYaml .Values.extraVolumes | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
