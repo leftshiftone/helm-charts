@@ -1,9 +1,0 @@
-Chart:   {{ .Chart.Name }}-{{ .Chart.Version }}
-Version: {{ .Chart.AppVersion }} (image tag {{ default .Chart.AppVersion .Values.image.tag }})
-
-LEFTSHIFT ONE Software GmbH
-support@leftshift.one
-https://www.leftshift.one
-
-Show this information with:
-  helm get notes {{ .Release.Name }}
