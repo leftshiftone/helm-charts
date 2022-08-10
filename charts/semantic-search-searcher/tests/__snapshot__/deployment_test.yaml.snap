@@ -1,0 +1,103 @@
+custom values:
+  1: |
+    replicas: 1
+    selector:
+      matchLabels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/name: semantic-search-searcher
+    strategy:
+      rollingUpdate:
+        maxSurge: 1
+        maxUnavailable: 0
+      type: RollingUpdate
+    template:
+      metadata:
+        annotations:
+          checksum/config: 89821d3599327337cfe017747b12ab7cea6a816756b83bbbb6e79353df6a5727
+        labels:
+          app.kubernetes.io/instance: RELEASE-NAME
+          app.kubernetes.io/name: semantic-search-searcher
+          application: semantic-search-searcher
+      spec:
+        containers:
+        - envFrom:
+          - configMapRef:
+              name: RELEASE-NAME-semantic-search-searcher
+          image: 007098893018.dkr.ecr.eu-central-1.amazonaws.com/semantic-search-searcher:latest
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+          name: semantic-search-searcher
+          ports:
+          - containerPort: 8080
+            name: http
+            protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+          securityContext: {}
+          startupProbe:
+            failureThreshold: 30
+            httpGet:
+              path: /ready
+              port: http
+            periodSeconds: 10
+        securityContext: {}
+        serviceAccountName: RELEASE-NAME-semantic-search-searcher
+default:
+  1: |
+    replicas: 1
+    selector:
+      matchLabels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/name: semantic-search-searcher
+    strategy:
+      rollingUpdate:
+        maxSurge: 1
+        maxUnavailable: 0
+      type: RollingUpdate
+    template:
+      metadata:
+        annotations:
+          checksum/config: 89821d3599327337cfe017747b12ab7cea6a816756b83bbbb6e79353df6a5727
+        labels:
+          app.kubernetes.io/instance: RELEASE-NAME
+          app.kubernetes.io/name: semantic-search-searcher
+          application: semantic-search-searcher
+      spec:
+        containers:
+        - envFrom:
+          - configMapRef:
+              name: RELEASE-NAME-semantic-search-searcher
+          image: 007098893018.dkr.ecr.eu-central-1.amazonaws.com/semantic-search-searcher:0.0.0
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+          name: semantic-search-searcher
+          ports:
+          - containerPort: 8080
+            name: http
+            protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http
+          resources: {}
+          securityContext: {}
+          startupProbe:
+            failureThreshold: 30
+            httpGet:
+              path: /ready
+              port: http
+            periodSeconds: 10
+        securityContext: {}
+        serviceAccountName: RELEASE-NAME-semantic-search-searcher
