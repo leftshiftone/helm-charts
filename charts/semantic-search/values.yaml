@@ -1,0 +1,149 @@
+# Default values for semantic-search.
+# This is a YAML-formatted file.
+
+semantic-search-indexer:
+  enabled: true
+  app:
+    config:
+      LOG_LEVEL: "INFO"
+      ES_URL: "http://semantic-search-elasticsearch:9200"
+      MINIO_HOST: "semantic-search-minio:9000"
+      MINIO_USER: indexer
+      ENABLE_METRICS: "false"
+    minioExistingSecret: semantic-search-minio-passwords
+    minioExistingSecretKey: indexerPassword
+  resources: {}
+    # limits:
+    #   cpu: 1000m
+    #   memory: 1024Mi
+    # requests:
+    #   cpu: 500m
+    #   memory: 512Mi
+  podMonitor:
+    enabled: false
+    # namespace: monitoring
+    interval: 10s
+    additionalLabels: {}
+
+semantic-search-searcher:
+  enabled: true
+  app:
+    config:
+      LOG_LEVEL: "INFO"
+      ES_URL: "http://semantic-search-elasticsearch:9200"
+      ENABLE_METRICS: "false"
+  resources: {}
+    # limits:
+    #   cpu: 1000m
+    #   memory: 1024Mi
+    # requests:
+    #   cpu: 500m
+    #   memory: 512Mi
+  podMonitor:
+    enabled: false
+    # namespace: monitoring
+    interval: 10s
+    additionalLabels: {}
+
+
+elasticsearch:
+  enabled: true
+  imageTag: 7.17.3
+  replicas: 3
+  minimumMasterNodes: 2
+  resources: {}
+    # limits:
+    #   cpu: 2000m
+    #   memory: 6144Mi
+    # requests:
+    #   cpu: 1000m
+    #   memory: 1024Mi
+  tests:
+    enabled: false
+  volumeClaimTemplate:
+    resources:
+      requests:
+        storage: 10Gi
+
+
+prometheus-elasticsearch-exporter:
+  enabled: false
+  es:
+    uri: http://elasticsearch-master:9200
+    all: true
+  resources: {}
+    # limits:
+    #   cpu: 100m
+    #   memory: 256Mi
+    # requests:
+    #   cpu: 10m
+    #   memory: 128Mi
+  serviceMonitor:
+    enabled: false
+    # namespace: monitoring
+    interval: 10s
+    labels: {}
+
+
+minio:
+  enabled: true
+  image:
+    tag: RELEASE.2022-07-30T05-21-40Z
+  persistence:
+    enabled: true
+    size: 10G
+  # rootUser: admin
+  # rootPassword: adminadmin
+  users:
+    - accessKey: indexer
+      # secretKey: indexersecret
+      existingSecret: semantic-search-minio-passwords
+      existingSecretKey: indexerPassword
+      policy: indexer
+    - accessKey: connector
+      # secretKey: connectorsecret
+      existingSecret: semantic-search-minio-passwords
+      existingSecretKey: connectorPassword
+      policy: connector
+  policies:
+    - name: indexer
+      statements:
+        - resources:
+            - "arn:aws:s3:::*/*"
+          actions:
+            # can create buckets and read bucket content
+            - "s3:CreateBucket"
+            - "s3:DeleteBucket"
+            - "s3:GetBucketLocation"
+            - "s3:ListBucket"
+            - "s3:ListBucketMultipartUploads"
+            - "s3:ListMultipartUploadParts"
+            - "s3:AbortMultipartUpload"
+            - "s3:GetObject"
+    - name: connector
+      statements:
+        - resources:
+            - "arn:aws:s3:::*/*"
+          actions:
+            # can read and write into buckets
+            - "s3:GetBucketLocation"
+            - "s3:ListBucket"
+            - "s3:ListBucketMultipartUploads"
+            - "s3:ListMultipartUploadParts"
+            - "s3:AbortMultipartUpload"
+            - "s3:GetObject"
+            - "s3:DeleteObject"
+            - "s3:PutObject"
+  resources: {}
+    # limits:
+    #   cpu: 1000m
+    #   memory: 1024Mi
+    # requests:
+    #   cpu: 250m
+    #   memory: 256Mi
+  metrics:
+    serviceMonitor:
+      enabled: false
+      # namespace: monitoring
+      interval: 30s
+      additionalLabels: {}
