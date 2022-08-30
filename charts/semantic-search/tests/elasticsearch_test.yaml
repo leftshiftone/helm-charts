@@ -1,0 +1,15 @@
+suite: test elasticsearch
+templates:
+  - elasticsearch.yaml
+tests:
+  - it: default
+    set:
+      elasticsearch.config.node.store.allow_mmap: false
+    asserts:
+      - isKind:
+          of: Elasticsearch
+      - equal:
+          path: metadata.name
+          value: semantic-search-elasticsearch
+      - matchSnapshot:
+          path: spec

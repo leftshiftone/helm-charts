@@ -1,0 +1,19 @@
+default:
+  1: |
+    nodeSets:
+    - config:
+        node:
+          store:
+            allow_mmap: false
+      count: 3
+      name: semantic-search
+      volumeClaimTemplates:
+      - metadata:
+          name: elasticsearch-data
+        spec:
+          accessModes:
+          - ReadWriteOnce
+          resources:
+            requests:
+              storage: 10Gi
+    version: 8.4.0

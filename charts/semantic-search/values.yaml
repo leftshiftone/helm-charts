@@ -9,6 +9,8 @@ semantic-search-indexer:
       ES_URL: "http://semantic-search-elasticsearch:9200"
       MINIO_HOST: "semantic-search-minio:9000"
       MINIO_USER: indexer
+      # See the readme on how to upload and mount the model.
+      # MODEL_PATH: "/models/sentence-transformers_paraphrase-multilingual-MiniLM-L12-v2"
       ENABLE_METRICS: "false"
     minioExistingSecret: semantic-search-minio-passwords
     minioExistingSecretKey: indexerPassword
@@ -19,6 +21,14 @@ semantic-search-indexer:
     # requests:
     #   cpu: 500m
     #   memory: 512Mi
+  extraVolumeMounts: []
+    # - mountPath: /models
+    #   name: models
+    #   readOnly: true
+  extraVolumes: []
+    # - name: models
+    #   persistentVolumeClaim:
+    #     claimName: model-volume-claim
   podMonitor:
     enabled: false
     # namespace: monitoring
@@ -31,6 +41,8 @@ semantic-search-searcher:
     config:
       LOG_LEVEL: "INFO"
       ES_URL: "http://semantic-search-elasticsearch:9200"
+      # See the readme on how to upload and mount the model.
+      # MODEL_PATH: "/models/sentence-transformers_paraphrase-multilingual-MiniLM-L12-v2"
       ENABLE_METRICS: "false"
   resources: {}
     # limits:
@@ -39,18 +51,39 @@ semantic-search-searcher:
     # requests:
     #   cpu: 500m
     #   memory: 512Mi
+  extraVolumeMounts: []
+    # - mountPath: /models
+    #   name: models
+    #   readOnly: true
+  extraVolumes: []
+    # - name: models
+    #   persistentVolumeClaim:
+    #     claimName: model-volume-claim
   podMonitor:
     enabled: false
     # namespace: monitoring
     interval: 10s
     additionalLabels: {}
 
+# See https://www.elastic.co/guide/en/cloud-on-k8s/2.4/k8s-install-helm.html for more information
+eck-operator:
+  enabled: true
+  installCRDs: false # First install CRDs: helm upgrade --install esk-operator-crds --version 2.4.0 elastic/eck-operator-crds
+  resources: {}
+    # limits:
+    #   cpu: 1000m
+    #   memory: 1024Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 150Mi
 
 elasticsearch:
   enabled: true
-  imageTag: 7.17.3
+  version: 8.4.0
   replicas: 3
-  minimumMasterNodes: 2
+  config: {}
+    # Satisfies bootstrap check "max virtual memory areas vm.max_map_count [65530] is too low, increase to at least [262144]"
+    # node.store.allow_mmap: false
   resources: {}
     # limits:
     #   cpu: 2000m
@@ -58,12 +91,16 @@ elasticsearch:
     # requests:
     #   cpu: 1000m
     #   memory: 1024Mi
-  tests:
-    enabled: false
-  volumeClaimTemplate:
-    resources:
-      requests:
-        storage: 10Gi
+  volumeClaimTemplates:
+    - metadata:
+        name: elasticsearch-data # Do not change this name unless you set up a volume mount for the data path.
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi
+        # storageClassName: default
 
 
 prometheus-elasticsearch-exporter:
