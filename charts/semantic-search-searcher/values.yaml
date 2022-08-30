@@ -8,6 +8,7 @@ app:
     LOG_LEVEL: "INFO"
     HTTP_LOG_LEVEL: "WARNING"
     ES_URL: "http://semantic-search-elasticsearch:9200"
+    # MODEL_PATH: "/models/sentence-transformers_paraphrase-multilingual-MiniLM-L12-v2"
     ENABLE_METRICS: "true"
   waitForElasticsearch: true
 
@@ -115,14 +116,13 @@ startupProbe:
   periodSeconds: 10
 
 extraVolumeMounts: []
-  # - mountPath: /debug
-  #   name: host
+  # - mountPath: /models
+  #   name: models
   #   readOnly: true
 extraVolumes: []
-  # - name: host
-  #   hostPath:
-  #     path: /host
-  #     type: Directory
+  # - name: models
+  #   persistentVolumeClaim:
+  #     claimName: model-volume-claim
 
 nodeSelector: {}
 

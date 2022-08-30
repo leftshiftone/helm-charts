@@ -12,6 +12,7 @@ app:
     # MINIO_USER: admin
     # MINIO_PASSWORD: adminadmin
     # MINIO_IS_TLS: true
+    # MODEL_PATH: "/models/sentence-transformers_paraphrase-multilingual-MiniLM-L12-v2"
     ENABLE_METRICS: "true"
   # minioExistingSecret: ""
   # minioExistingSecretKey: ""
