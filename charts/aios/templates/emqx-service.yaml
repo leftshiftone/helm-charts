@@ -1,0 +1,38 @@
+{{- if .Values.emqx.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "emqx.fullname" . }}
+  labels:
+    application: {{ include "emqx.name" . }}
+  {{- include "emqx.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.emqx.service.type }}
+  ports:
+    - name: mqtt
+      port: {{ .Values.emqx.service.mqtt | default 1883 }}
+      protocol: TCP
+      targetPort: mqtt
+    - name: mqttssl
+      port: {{ .Values.emqx.service.mqttssl | default 8883 }}
+      protocol: TCP
+      targetPort: mqttssl
+    - name: mgmt
+      port: {{ .Values.emqx.service.mgmt | default 8081 }}
+      protocol: TCP
+      targetPort: mgmt
+    - name: ws
+      port: {{ .Values.emqx.service.ws | default 8083 }}
+      protocol: TCP
+      targetPort: ws
+    - name: wss
+      port: {{ .Values.emqx.service.wss | default 8084 }}
+      protocol: TCP
+      targetPort: wss
+    - name: dashboard
+      port: {{ .Values.emqx.service.dashboard | default 18083 }}
+      protocol: TCP
+      targetPort: dashboard
+  selector:
+  {{- include "emqx.selectorLabels" . | nindent 4 }}
+{{- end }}

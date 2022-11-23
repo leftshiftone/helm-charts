@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "aios.fullname" . }}-app
+  labels:
+    application: {{ include "aios.name" . }}
+    {{- include "aios.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ (first (first .Values.ingress.hosts).paths).port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+    - port: 5005
+      targetPort: java-debug
+      protocol: TCP
+      name: java-debug
+  selector:
+    {{- include "aios.selectorLabels" . | nindent 4 }}

@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.app.urlsConfigMapName }}
+  labels:
+  {{- include "aios.labels" . | nindent 4 }}
+data:
+  aios-url: {{ (include "aios.url" .) | quote }}
+  aios-internal-url: {{ (include "aios.url-internal" .) | quote }}
+  aios-realm-redirect-url: {{ printf "%s/*" (include "aios.url" .) | quote }}
+  keycloak-url: {{ printf "%s" (include "aios.keycloak.url" .) }}
+  keycloak-internal-url: {{ printf "%s" (include "aios.keycloak.url-internal" .) }}
+  {{- $mqttProtocol := "ws" }}
+  {{- if .Values.emqx.ingress.broker.tls }}
+  {{- $mqttProtocol = "wss" }}
+  {{- end }}
+  {{- $mqttHost := "localhost" }}
+  {{- if .Values.emqx.ingress.broker.hosts }}
+  {{- $mqttHost = (first .Values.emqx.ingress.broker.hosts).host }}
+  {{- end }}
+  {{- $mqttPath := "/mqtt" }}
+  {{- if .Values.emqx.ingress.broker.hosts }}
+  {{- $mqttPath = (first (first .Values.emqx.ingress.broker.hosts).paths).path }}
+  {{- end }}
+  {{- $mqttUrl := printf "%s://%s%s" $mqttProtocol $mqttHost $mqttPath }}
+  emqx-url: {{ $mqttUrl }}
+  grafana-url: {{ include "aios.grafana.url" . }}
+  grafana-internal-url: {{ include "aios.grafana.url-internal" . }}
+  grafana-realm-redirect-url: {{ printf "%s/*" (include "aios.grafana.url" .) }}
+  loki-url: {{ include "aios.grafana.loki.url" . }}
+  prometheus-url: {{ include "aios.prometheus.url" . }}

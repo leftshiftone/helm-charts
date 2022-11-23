@@ -1,0 +1,12 @@
+{{- if .Values.emqx.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "emqx.fullname" . }}
+  labels:
+  {{- include "emqx.labels" . | nindent 4 }}
+data:
+  {{- range $key, $val := .Values.emqx.config }}
+  {{ $key }}: {{ $val | quote }}
+  {{- end }}
+{{- end }}

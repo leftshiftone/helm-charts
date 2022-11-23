@@ -1,0 +1,23 @@
+{{- $kubePrometheusStack := get .Values "kube-prometheus-stack" }}
+{{- if and $kubePrometheusStack.enabled $kubePrometheusStack.grafana.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $kubePrometheusStack.grafana.aiosConfig }}
+  labels:
+  {{- include "aios.labels" . | nindent 4 }}
+data:
+  {{- $realmName := "AIOS" }}
+  {{- $keycloakUrl := include "aios.keycloak.url" . }}
+  {{- $keycloakInternalUrl := $keycloakUrl }}
+  {{- if $kubePrometheusStack.grafana.useInternalUrlForOauth }}
+  {{- $keycloakInternalUrl = include "aios.keycloak.url-internal" . }}
+  {{- end }}
+  GF_SERVER_ROOT_URL: {{ include "aios.grafana.url" . }}
+  GF_AUTH_GENERIC_OAUTH_NAME: {{ $realmName }}
+  GF_AUTH_GENERIC_OAUTH_CLIENT_ID: "aios-grafana"
+  GF_AUTH_GENERIC_OAUTH_SCOPES: "openid email profile"
+  GF_AUTH_GENERIC_OAUTH_AUTH_URL: {{ printf "%s/realms/%s/protocol/openid-connect/auth" $keycloakUrl $realmName }}
+  GF_AUTH_GENERIC_OAUTH_TOKEN_URL: {{ printf "%s/realms/%s/protocol/openid-connect/token" $keycloakInternalUrl $realmName }}
+  GF_AUTH_GENERIC_OAUTH_API_URL: {{ printf "%s/realms/%s/protocol/openid-connect/userinfo" $keycloakInternalUrl $realmName }}
+{{- end }}

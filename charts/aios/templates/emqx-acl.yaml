@@ -1,0 +1,11 @@
+{{- if .Values.emqx.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "emqx.fullname" . }}-acl
+  labels:
+  {{- include "emqx.labels" . | nindent 4 }}
+data:
+  acl.conf: |
+    {{ .Values.emqx.acl }}
+{{- end }}

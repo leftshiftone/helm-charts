@@ -1,0 +1,76 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "aios.fullname" . }}
+  labels:
+  {{- include "aios.labels" . | nindent 4 }}
+data:
+  {{- if and (not (hasKey .Values.app.config "AIOS_HTTP_DNS_NAME")) .Values.ingress.enabled }}
+  AIOS_HTTP_DNS_NAME: {{ (first .Values.ingress.hosts).host | quote }}
+  {{- end }}
+  {{- if not (hasKey .Values.app.config "AIOS_K8S_ENABLED") }}
+  AIOS_K8S_ENABLED: "true"
+  {{- end }}
+  {{- if and (not (hasKey .Values.app.config "AIOS_K8S_SERVICE_ACCOUNT_NAME")) .Values.serviceAccount.create}}
+  AIOS_K8S_SERVICE_ACCOUNT_NAME: {{ .Values.serviceAccount.name | default (include "aios.serviceAccountName" .) | quote }}
+  {{- end }}
+  # Database
+  {{- $jdbcUrl := printf "jdbc:postgresql://%s-postgresql:5432/%s" (include "aios.fullname" .) .Values.postgresql.postgresqlDatabase -}}
+  {{- if and (not (hasKey .Values.app.config "AIOS_JDBC_URL")) .Values.postgresql.enabled }}
+  AIOS_JDBC_URL: {{ $jdbcUrl | quote }}
+  {{- end }}
+  {{- if and (not (hasKey .Values.app.config "AIOS_JDBC_USERNAME")) .Values.postgresql.enabled }}
+  AIOS_JDBC_USERNAME: {{ .Values.postgresql.postgresqlUsername | quote }}
+  {{- end }}
+  {{- if and (and (not (hasKey .Values.app.config "AIOS_JDBC_PASSWORD")) .Values.postgresql.enabled) .Values.postgresql.postgresqlPassword }}
+  AIOS_JDBC_PASSWORD: {{ .Values.postgresql.postgresqlPassword | quote }}
+  {{- end }}
+  # Keycloak
+  {{- if not (hasKey .Values.app.config "AIOS_SECURITY_KEYCLOAK_ENABLED") }}
+  AIOS_SECURITY_KEYCLOAK_ENABLED: {{ .Values.keycloak.enabled | quote }}
+  {{- end }}
+  # Proxy
+  {{- if not (hasKey .Values.app.config "AIOS_ENVOY_EXTENSION_SHA256_CHECKSUM") }}
+  AIOS_ENVOY_EXTENSION_SHA256_CHECKSUM: "latest" # Will be replaced in the CI pipeline
+  {{- end }}
+  {{- if and (and (not (hasKey .Values.app.config "AIOS_SECURITY_KEYCLOAK_SSL_REQUIRED")) .Values.keycloak.enabled) (not .Values.keycloak.ingress.tls) }}
+  AIOS_SECURITY_KEYCLOAK_SSL_REQUIRED: "none"
+  {{- end }}
+  # MQTT broker config
+  {{- if .Values.emqx.enabled }}
+    {{- if not (hasKey .Values.app.config "AIOS_MQTT_ENABLED") }}
+  AIOS_MQTT_ENABLED: "true"
+    {{- end }}
+    {{- if not (hasKey .Values.app.config "AIOS_MQTT_HOST") }}
+  AIOS_MQTT_HOST: "{{ .Release.Name }}-emqx"
+    {{- end }}
+    {{- if not (hasKey .Values.app.config "AIOS_MQTT_PORT") }}
+  AIOS_MQTT_PORT: {{ .Values.emqx.service.mqtt | quote }}
+    {{- end }}
+  {{- end }}
+  {{- if and (not (hasKey .Values.app.config "AIOS_MQTT_TOPIC_PREFIX")) (gt (int .Values.replicaCount) 1) }}
+  AIOS_MQTT_TOPIC_PREFIX: "$share/aios/"
+  {{- end }}
+  # Grafana config
+  {{- $kubePrometheusStack := get .Values "kube-prometheus-stack" }}
+  {{- if and $kubePrometheusStack.enabled $kubePrometheusStack.grafana.enabled }}
+    {{- if not (hasKey .Values.app.config "AIOS_GRAFANA_ENABLED") }}
+  AIOS_GRAFANA_ENABLED: {{ $kubePrometheusStack.grafana.enabled | quote }}
+    {{- end }}
+    {{- if not (hasKey .Values.app.config "AIOS_UI_GRAFANA_ENABLED") }}
+  AIOS_UI_GRAFANA_ENABLED: {{ $kubePrometheusStack.grafana.enabled | quote }}
+    {{- end }}
+  {{- end }}
+  # Prometheus config
+  {{- if and $kubePrometheusStack.enabled $kubePrometheusStack.prometheus.enabled }}
+    {{- if not (hasKey .Values.app.config "AIOS_PROMETHEUS_ENABLED") }}
+  AIOS_PROMETHEUS_ENABLED: {{ $kubePrometheusStack.prometheus.enabled | quote }}
+    {{- end }}
+  {{- end }}
+  {{- if not (hasKey .Values.app.config "AIOS_PROMETHEUS_RELEASE_NAMESPACE") }}
+  AIOS_PROMETHEUS_RELEASE_NAMESPACE: {{ .Release.Namespace | quote }}
+  {{- end }}
+  # Dynamic config
+  {{- range $key, $val := .Values.app.config }}
+  {{ $key }}: {{ $val | quote }}
+  {{- end }}

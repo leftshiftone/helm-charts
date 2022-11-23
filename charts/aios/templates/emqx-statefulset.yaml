@@ -1,0 +1,158 @@
+{{- if .Values.emqx.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "emqx.fullname" . }}
+  labels:
+  {{- include "emqx.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.emqx.replicaCount }}
+  selector:
+    matchLabels:
+  {{- include "emqx.selectorLabels" . | nindent 6 }}
+  serviceName: {{ include "emqx.fullname" . }}
+  updateStrategy:
+    type: RollingUpdate
+  {{- if and .Values.emqx.persistence.enabled (not .Values.emqx.persistence.existingClaim) }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      {{- with .Values.emqx.persistence.annotations }}
+        annotations:
+        {{- range $key, $value := . }}
+          {{ $key }}: {{ $value }}
+        {{- end }}
+      {{- end }}
+      spec:
+        accessModes:
+        {{- range .Values.emqx.persistence.accessModes }}
+          - {{ . | quote }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.emqx.persistence.size | quote }}
+        {{ include "emqx.storage.class" (dict "persistence" .Values.emqx.persistence "global" .Values.global) }}
+        {{- if .Values.emqx.persistence.selector }}
+        selector: {{- include "emqx.tplvalues.render" (dict "value" .Values.emqx.persistence.selector "context" $) | nindent 10 }}
+        {{- end -}}
+  {{- end }}
+  template:
+    metadata:
+      annotations:
+        {{- with .Values.emqx.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- include "emqx.configChecksum" . | nindent 8 }}
+      labels:
+        application: {{ include "emqx.name" . }}
+        {{- include "emqx.selectorLabels" . | nindent 8 }}
+        {{- with .Values.emqx.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.emqx.imagePullSecrets }}
+      imagePullSecrets:
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "emqx.serviceAccountName" . }}
+      securityContext:
+      {{- toYaml .Values.emqx.podSecurityContext | nindent 8 }}
+      initContainers:
+        {{- toYaml .Values.emqx.initContainers | indent 8 }}
+      containers:
+        - name: emqx
+          securityContext:
+          {{- toYaml .Values.emqx.securityContext | nindent 12 }}
+          image: "{{ .Values.emqx.image.repository }}:{{ .Values.emqx.image.tag | default "latest" }}"
+          imagePullPolicy: {{ .Values.emqx.image.pullPolicy }}
+          ports:
+            - name: mqtt
+              containerPort: {{ .Values.emqx.config.EMQX_LISTENER__TCP__EXTERNAL | default 1883 }}
+            - name: mqttssl
+              containerPort: {{ .Values.emqx.config.EMQX_LISTENER__SSL__EXTERNAL | default 8883 }}
+            - name: mgmt
+              containerPort: {{ .Values.emqx.config.EMQX_MANAGEMENT__LISTENER__HTTP | default 8081 }}
+            - name: ws
+              containerPort: {{ .Values.emqx.config.EMQX_LISTENER__WS__EXTERNAL | default 8083 }}
+            - name: wss
+              containerPort: {{ .Values.emqx.config.EMQX_LISTENER__WSS__EXTERNAL | default 8084 }}
+            - name: dashboard
+              containerPort: {{ .Values.emqx.config.EMQX_DASHBOARD__LISTENER__HTTP | default 18083 }}
+            - name: ekka
+              containerPort: 4370
+          livenessProbe:
+            httpGet:
+              path: /status
+              port: mgmt
+          readinessProbe:
+            httpGet:
+              path: /status
+              port: mgmt
+          startupProbe:
+            httpGet:
+              path: /status
+              port: mgmt
+            failureThreshold: 30
+            periodSeconds: 10
+          resources:
+          {{- toYaml .Values.resources | nindent 12 }}
+          env:
+            - name: EMQX_NAME
+              value: "emqx"
+            - name: EMQX_CLUSTER__K8S__APP_NAME
+              value: "emqx"
+            - name: EMQX_CLUSTER__DISCOVERY
+              value: k8s
+            - name: EMQX_CLUSTER__K8S__SERVICE_NAME
+              value: {{ include "emqx.fullname" . }}
+            - name: EMQX_CLUSTER__K8S__NAMESPACE
+              value: {{ .Release.Namespace }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "emqx.fullname" . }}
+            {{- if .Values.emqx.envFromSecret }}
+            - secretRef:
+                name: {{ .Values.emqx.envFromSecret }}
+            {{- end }}
+          {{- end }}
+          volumeMounts:
+            - name: acl
+              mountPath: /opt/emqx/etc/acl.conf
+              subPath: acl.conf
+            - name: data
+              mountPath: /opt/emqx/data/mnesia
+          {{- if .Values.emqx.extraVolumeMounts }}
+            {{- toYaml .Values.emqx.extraVolumeMounts | nindent 12 }}
+          {{- end }}
+      volumes:
+        - name: acl
+          configMap:
+            name: {{ include "emqx.fullname" . }}-acl
+            items:
+              - key: acl.conf
+                path: acl.conf
+        {{- if and .Values.emqx.persistence.enabled .Values.emqx.persistence.existingClaim }}
+        - name: data
+          persistentVolumeClaim:
+          {{- with .Values.emqx.persistence.existingClaim }}
+            claimName: {{ tpl . $ }}
+          {{- end }}
+        {{- else if not .Values.emqx.persistence.enabled }}
+        - name: data
+          emptyDir: {}
+        {{- end }}
+      {{- if .Values.emqx.extraVolumes }}
+      {{- toYaml .Values.emqx.extraVolumes | nindent 8 }}
+      {{- end }}
+      {{- with .Values.emqx.nodeSelector }}
+      nodeSelector:
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.emqx.affinity }}
+      affinity:
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.emqx.tolerations }}
+      tolerations:
+      {{- toYaml . | nindent 8 }}
+{{- end }}

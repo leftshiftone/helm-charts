@@ -1,0 +1,17 @@
+{{- $kubePrometheusStack := get .Values "kube-prometheus-stack" }}
+{{- $grafanaExtraConfigmapMountFirst := first $kubePrometheusStack.grafana.extraConfigmapMounts }}
+{{- if and $kubePrometheusStack.enabled $kubePrometheusStack.grafana.enabled $grafanaExtraConfigmapMountFirst.configMap }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $grafanaExtraConfigmapMountFirst.configMap }}
+  labels:
+  {{- include "aios.labels" . | nindent 4 }}
+data:
+  {{- $files := .Files }}
+  {{- range $kubePrometheusStack.grafana.aiosDashboards }}
+  {{- $fileName := . }}
+  {{ $fileName }}: |
+{{ $files.Get (printf "dashboards/%s" $fileName) | indent 4 }}
+  {{- end }}
+{{- end }}

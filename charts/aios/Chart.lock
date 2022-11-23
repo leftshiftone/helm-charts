@@ -1,0 +1,15 @@
+dependencies:
+- name: postgresql
+  repository: https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami
+  version: 10.10.3
+- name: keycloak
+  repository: https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami
+  version: 9.7.4
+- name: kube-prometheus-stack
+  repository: https://prometheus-community.github.io/helm-charts
+  version: 20.0.1
+- name: loki-stack
+  repository: https://grafana.github.io/helm-charts
+  version: 2.5.0
+digest: sha256:b973c6390a63538a4a825c90f7f42d6c5209e34deae2654a4e352b2f2faaf132
+generated: "2022-09-06T17:23:56.152259489+02:00"

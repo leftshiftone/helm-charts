@@ -1,0 +1,24 @@
+{{- if and .Values.keycloak.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.keycloak.configConfigmapName }}
+  labels:
+  {{- include "aios.labels" . | nindent 4 }}
+data:
+  {{- $rawHost := splitList ":" (get (urlParse (include "aios.keycloak.url" .)) "host") }}
+  {{- $host := first $rawHost }}
+  {{- $port := rest $rawHost }}
+  {{- if not (hasKey .Values.keycloak.config "KC_HOSTNAME") }}
+  KC_HOSTNAME: {{ $host | quote }}
+  {{- end }}
+  {{- if not (hasKey .Values.keycloak.config "KC_HOSTNAME_PORT") }}
+  {{- if $port }}
+  KC_HOSTNAME_PORT: {{ first $port | quote }}
+  {{- end }}
+  {{- end }}
+  # Dynamic config
+  {{- range $key, $val := .Values.keycloak.config }}
+  {{ $key }}: {{ $val | quote }}
+  {{- end }}
+{{- end -}}

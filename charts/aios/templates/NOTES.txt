@@ -1,0 +1,61 @@
+Chart:   {{ .Chart.Name }}-{{ .Chart.Version }}
+Version: {{ .Chart.AppVersion }} (image tag {{ default .Chart.AppVersion .Values.image.tag }})
+
+LEFTSHIFT ONE Software GmbH
+support@leftshift.one
+https://www.leftshift.one
+
+Get the application URL:
+{{- if .Values.ingress.enabled }}
+{{- range $host := .Values.ingress.hosts }}
+  {{- range .paths }}
+  http{{ if $.Values.ingress.tls }}s{{ end }}://{{ $host.host }}{{ .path }}
+  {{- end }}
+{{- end }}
+{{- else if contains "NodePort" .Values.service.type }}
+  export NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ include "aios.fullname" . }})
+  export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
+  echo http://$NODE_IP:$NODE_PORT
+{{- else if contains "LoadBalancer" .Values.service.type }}
+     NOTE: It may take a few minutes for the LoadBalancer IP to be available.
+           You can watch the status of by running 'kubectl get --namespace {{ .Release.Namespace }} svc -w {{ include "aios.fullname" . }}'
+  export SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ include "aios.fullname" . }} --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}")
+  echo http://$SERVICE_IP:80
+{{- else if contains "ClusterIP" .Values.service.type }}
+  export POD_NAME=$(kubectl get pods --namespace {{ .Release.Namespace }} -l "app.kubernetes.io/name={{ include "aios.name" . }},app.kubernetes.io/instance={{ .Release.Name }}" -o jsonpath="{.items[0].metadata.name}")
+  export CONTAINER_PORT=$(kubectl get pod --namespace {{ .Release.Namespace }} $POD_NAME -o jsonpath="{.spec.containers[0].ports[0].containerPort}")
+  echo "Visit http://127.0.0.1:8080 to use your application"
+  kubectl --namespace {{ .Release.Namespace }} port-forward $POD_NAME 8080:$CONTAINER_PORT
+{{- end }}
+{{- if .Values.app.admin.existingSecret }}
+
+Get the admin password for the application for user admin@local:
+  export AIOS_ADMIN_PASSWORD=$(kubectl get secret --namespace {{ .Release.Namespace }} {{ .Values.app.admin.existingSecret }} -o jsonpath="{.data.password}" | base64 --decode)
+{{- end }}
+{{- $kubePrometheusStack := get .Values "kube-prometheus-stack" }}
+{{- if and $kubePrometheusStack.enabled (and $kubePrometheusStack.grafana.enabled $kubePrometheusStack.grafana.admin.existingSecret) }}
+
+Get the admin password for grafana with:
+  export GRAFANA_ADMIN_PASSWORD=$(kubectl get secret --namespace {{ .Release.Namespace }} {{ $kubePrometheusStack.grafana.admin.existingSecret }} -o jsonpath="{.data.admin-password}" | base64 --decode)
+{{- end }}
+
+{{- if and .Values.postgresql.enabled .Values.postgresql.existingSecret }}
+
+Get the database password for user {{ .Values.postgresql.postgresqlUsername }} and database {{ .Values.postgresql.postgresqlDatabase }}:
+  export POSTGRES_ADMIN_PASSWORD=$(kubectl get secret --namespace {{ .Release.Namespace }} {{ .Values.postgresql.existingSecret }} -o jsonpath="{.data.postgresql-postgres-password}" | base64 --decode)
+{{- end }}
+
+{{- if and .Values.keycloak.enabled .Values.keycloak.passwordsSecretName }}
+
+Get the keycloak password:
+  export KEYCLOAK_ADMIN_PASSWORD=$(kubectl get secret --namespace {{ .Release.Namespace }} {{ .Values.keycloak.passwordsSecretName }} -o jsonpath="{.data.admin-password}" | base64 --decode)
+{{- end }}
+{{- if .Values.emqx.enabled }}
+
+Get the MQTT password:
+  export MQTT_PASSWORD=$(kubectl get secret --namespace {{ .Release.Namespace }} {{ .Values.emqx.envFromSecret }} -o jsonpath="{.data.ADMIN_PASSWORD}" | base64 --decode)
+  export MQTT_DASHBOARD_PASSWORD=$(kubectl get secret --namespace {{ .Release.Namespace }} {{ .Values.emqx.envFromSecret }} -o jsonpath="{.data.ADMIN_DASHBOARD_PASSWORD}" | base64 --decode)
+{{- end }}
+
+Show this information with:
+  helm get notes {{ .Release.Name }}

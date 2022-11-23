@@ -1,0 +1,48 @@
+body {
+    background-image: none;
+}
+
+.navbar-pf {
+    background: none;
+    border: none;
+    border-bottom: 1px solid #cecece;
+}
+.navbar-pf .navbar-header {
+    border: none;
+    border-bottom: none;
+}
+.navbar-title {
+    background-image: url("../img/logo.svg");
+    background-repeat: no-repeat;
+    background-size: contain;
+    -webkit-background-size: contain;
+    margin: 3px 27px 5px;
+}
+.navbar-pf .navbar-utility > li > a {
+    color: var(--aios--palette--violet-main) !important;
+}
+
+.bs-sidebar ul li a {
+    font-size: 1.5rem;
+    text-transform: uppercase;
+    text-decoration: none;
+    border: none;
+}
+.bs-sidebar ul li a:hover,
+.bs-sidebar ul li a:focus {
+    border: none;
+    color: var(--aios--palette--violet-contrastText);
+    background-color: var(--aios--palette--violet-main);
+    font-weight: bold;
+}
+.bs-sidebar ul li.active a {
+    border: none;
+    color: var(--aios--palette--violet-contrastText);
+    background-color: var(--aios--palette--violet-main);
+    background-image: none;
+    font-weight: bold;
+}
+
+.form-horizontal {
+    border-top: none;
+}

@@ -1,0 +1,33 @@
+.login-pf body {
+    font-size: 1rem;
+    background-image: url("../img/illustration.svg");
+    background-repeat: no-repeat;
+    background-color: #fff;
+    background-size: contain;
+    -webkit-background-size: contain;
+    background-position: bottom right;
+}
+
+.login-pf a {
+    color: var(--aios--palette--violet-main);
+    text-decoration: underline;
+}
+
+.login-pf a:hover {
+    color: var(--aios--palette--violet-dark);
+}
+
+#kc-header-wrapper {
+    display: none;
+}
+
+#kc-header {
+    height: 64px;
+    background-image: url("../img/logo.svg");
+    background-repeat: no-repeat;
+    background-position: center bottom;
+}
+
+.pf-c-button.pf-m-primary {
+    font-size: 1rem;
+}

@@ -1,0 +1,833 @@
+# Default values for aios.
+# This is a YAML-formatted file.
+
+app:
+  admin:
+    # If set a random password will be created in a secret with the name specified below. If a specific password
+    # should be used, the password in app.config.AIOS_SECURITY_ADMIN_PASSWORD needs to be set explicitly.
+    existingSecret: aios-admin-password
+  # Specifies configuration of the application
+  config:
+    # Available log levels: DEBUG, INFO, WARN, ERROR
+    AIOS_LOGGING_LEVEL: "INFO"
+    # Explicitly set the initial admin password.
+    # AIOS_SECURITY_ADMIN_PASSWORD: "admin"
+    # The email configuration is used for Keycloak to be able to send emails in order to invite users.
+    # It also acts as a fallback SMTP config for the application itself.
+    # AIOS_SMTP_FROM_ADDRESS: "aios@local"
+    # AIOS_SMTP_FROM_NAME: "AIOS"
+    # AIOS_SMTP_REPLY_ADDRESS: ""
+    # AIOS_SMTP_HOST: ""
+    # AIOS_SMTP_PORT: ""
+    # AIOS_SMTP_USER: "" # Should be specified in a secret
+    # AIOS_SMTP_PASSWORD: "" # Should be specified in a secret
+    # AIOS_SMTP_AUTH: "true"
+    # AIOS_SMTP_STARTTLS: "true"
+  # Define the secret name which hold the user and password for the SMTP configuration.
+  # e.g. kubectl create secret generic aios-smtp-credentials --from-literal=AIOS_SMTP_USER=admin --from-literal=AIOS_SMTP_PASSWORD='admin'
+  smtpCredentialsSecretName: ""
+  smtpConfigSecretName: aios-smtp-config
+  urlsConfigMapName: aios-urls
+  waitForDatabase: true
+  waitForKeycloak: true
+  waitForGrafana: true
+
+replicaCount: 1
+
+image:
+  repository: 007098893018.dkr.ecr.eu-central-1.amazonaws.com/aios
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+  # Image pull secrets to use with this service account (is needed if certain registry credentials are needed for pulling the AIOS image).
+  imagePullSecrets: []
+
+podAnnotations: {}
+
+podLabels:
+  aios.dev/tenant-id: "AIOS"
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: aios.local
+      paths:
+        - path: /
+          port: 80
+          pathType: Prefix
+  tls: []
+  #  - secretName: aios-tls
+  #    hosts:
+  #      - aios.local
+
+podMonitor:
+  enabled: false
+  path: /metrics/prometheus
+  port: http
+  namespace: ""
+  interval: 10s
+  additionalLabels: {}
+  additionalPodTargetLabels:
+    - aios_tenant
+    - application
+    - app_kubernetes_io_instance
+    - app_kubernetes_io_name
+    - app_kubernetes_io_version
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 1000m
+  #   memory: 1024Mi
+  # requests:
+  #   cpu: 500m
+  #   memory: 512Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 9
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+livenessProbe:
+  httpGet:
+    path: /health
+    port: http
+readinessProbe:
+  httpGet:
+    path: /ready
+    port: http
+startupProbe:
+  httpGet:
+    path: /ready
+    port: http
+  failureThreshold: 60
+  periodSeconds: 5
+
+extraVolumeMounts: []
+  # - mountPath: /debug
+  #   name: host
+  #   readOnly: true
+extraVolumes: []
+  # - name: host
+  #   hostPath:
+  #     path: /host
+  #     type: Directory
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+
+# Deploy postgres with the included helm chart from https://artifacthub.io/packages/helm/bitnami/postgresql
+postgresql:
+  enabled: true
+  image:
+    registry: docker.io
+    repository: bitnami/postgresql
+    tag: 11.13.0-debian-10-r90
+  postgresqlDatabase: aios
+  postgresqlUsername: admin
+  # If left empty a random password will be created in a secret with the name specified below. If a specific password
+  # should be used, the existingSecret needs to be set to an empty string or needs to be commented out.
+  postgresqlPassword: ""
+  postgresqlPostgresPassword: ""
+  existingSecret: aios-postgresql-password
+  persistence:
+    enabled: true
+    size: 5Gi
+  service:
+    port: 5432
+  # securityContext:
+  #   fsGroup: 0
+  # volumePermissions:
+  #   enabled: true
+  #   securityContext:
+  #     runAsUser: 0
+  #   image:
+  #     pullPolicy: IfNotPresent
+  # resources:
+  #   limits:
+  #     cpu: 1000m
+  #     memory: 1024Mi
+  #   requests:
+  #     cpu: 250m
+  #     memory: 256Mi
+  metrics:
+    enabled: false
+    serviceMonitor:
+      enabled: true
+      interval: 10s
+      additionalLabels: {}
+        # Enable by setting it to the release name in order to be picked up by prometheus.
+        # release: aios
+    # resources:
+    #   limits:
+    #     cpu: 500m
+    #     memory: 512Mi
+    #   requests:
+    #     cpu: 250m
+    #     memory: 256Mi
+  primary:
+    podLabels:
+      aios.dev/tenant-id: "AIOS"
+
+
+# Deploy emqx for kubernetes with the included helm chart from https://github.com/emqx/emqx/tree/v4.2.14/deploy/charts/emqx
+emqx:
+  enabled: true
+  image:
+    repository: emqx/emqx
+    tag: 4.2.14
+    pullPolicy: IfNotPresent
+  replicaCount: 1
+  persistence:
+    enabled: false
+    existingClaim: ""
+    mountPath: /opt/emqx/data
+    subPath: ""
+    accessModes:
+      - ReadWriteOnce
+    size: 256Mi
+    annotations: {}
+    selector: {}
+  podLabels:
+    aios.dev/tenant-id: "AIOS"
+  resources: {}
+    # limits:
+    #   cpu: 1000m
+    #   memory: 1024Mi
+    # requests:
+    #   cpu: 200m
+    #   memory: 256Mi
+  config:
+    EMQX_LOG__TO: console
+    EMQX_LOG__LEVEL: warning
+    EMQX_LISTENER__TCP__EXTERNAL: 1883
+    EMQX_LISTENER__WS__EXTERNAL: 8083
+    EMQX_LISTENER__WS__EXTERNAL__MQTT_PATH: "/mqtt"
+    EMQX_ALLOW_ANONYMOUS: false
+    EMQX_ACL_NOMATCH: deny
+    EMQX_ACL_FILE: "etc/acl.conf"
+    EMQX_LOADED_PLUGINS: "emqx_auth_mnesia,emqx_auth_http"
+    EMQX_AUTH__MNESIA__PASSWORD_HASH: sha256
+    EMQX_AUTH__MNESIA__1__LOGIN: "admin"
+    EMQX_AUTH__MNESIA__1__IS_SUPERUSER: "true"
+    EMQX_AUTH__HTTP__AUTH_REQ__CONTENT_TYPE: "json"
+    EMQX_AUTH__HTTP__AUTH_REQ__PARAMS: "token=%P"
+    EMQX_AUTH__HTTP__ACL_REQ: ""
+    EMQX_AUTH__HTTP__ACL_REQ__METHOD: ""
+    EMQX_AUTH__HTTP__ACL_REQ__PARAMS: ""
+    EMQX_DASHBOARD__LISTENER__HTTP: 18083
+    EMQX_DASHBOARD__DEFAULT_USER__LOGIN: "admin"
+    EMQX_CLUSTER__K8S__ADDRESS_TYPE: hostname
+    EMQX_CLUSTER__K8S__APISERVER: https://kubernetes.default.svc:443
+    EMQX_CLUSTER__K8S__SUFFIX: svc.cluster.local
+  acl: |
+    {allow, {user, "admin"}, subscribe, ["$SYS/#"]}. {allow, {user, "admin"}, publish, ["aios/users/+/notifications"]}. {allow, all, subscribe, ["aios/users/%u/notifications"]}. {allow, {user, "dashboard"}, subscribe, ["$SYS/#"]}. {allow, {ipaddr, "127.0.0.1"}, pubsub, ["$SYS/#", "#"]}. {deny, all}.
+  envFromSecret: aios-emqx-secret
+  serviceAccount:
+    # Specifies whether a service account should be created
+    create: true
+    # Annotations to add to the service account
+    annotations: {}
+    # The name of the service account to use.
+    # If not set and create is true, a name is generated using the fullname template
+    name: ""
+  ingress:
+    broker:
+      enabled: true
+      className: ""
+      annotations: {}
+        # kubernetes.io/ingress.class: nginx
+        # kubernetes.io/tls-acme: "true"
+      hosts:
+        - host: aios.local
+          paths:
+            - path: /mqtt
+              port: 8083
+              pathType: Exact
+      tls: []
+        #  - secretName: aios-tls
+        #    hosts:
+        #      - aios.local
+    dashboard:
+      enabled: false
+      className: ""
+      annotations: {}
+        # kubernetes.io/ingress.class: nginx
+        # kubernetes.io/tls-acme: "true"
+      hosts:
+        - host: aios.local
+          paths:
+            - path: /mqtt/dashboard
+              port: 18083
+              pathType: ImplementationSpecific
+      tls: []
+        #  - secretName: aios-tls
+        #    hosts:
+        #      - aios.local
+    api:
+      enabled: false
+      className: ""
+      annotations: {}
+        # kubernetes.io/ingress.class: nginx
+        # kubernetes.io/tls-acme: "true"
+      hosts:
+        - host: aios.local
+          paths:
+            - path: /mqtt/api
+              port: 8081
+              pathType: ImplementationSpecific
+      tls: []
+        #  - secretName: aios-tls
+        #    hosts:
+        #      - aios.local
+  service:
+    type: ClusterIP
+    mqtt: 1883
+    ws: 8083
+    mgmt: 8081
+    dashboard: 18083
+  imagePullSecrets: []
+  podAnnotations: {}
+  podSecurityContext:
+    fsGroup: 0
+    fsGroupChangePolicy: Always
+    runAsUser: 0
+    supplementalGroups:
+      - 0
+  securityContext: {}
+    # capabilities:
+    #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
+  extraVolumeMounts: []
+    # - mountPath: /debug
+    #   name: host
+    #   readOnly: true
+  extraVolumes: []
+    # - name: host
+    #   hostPath:
+    #     path: /host
+    #     type: Directory
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  initContainers: []
+
+
+# Deploy keycloak with the included helm chart from https://artifacthub.io/packages/helm/bitnami/keycloak
+keycloak:
+  enabled: false
+  image:
+    registry: quay.io
+    repository: keycloak/keycloak
+    tag: 20.0.1
+  themeConfigmapName: aios-keycloak-theme
+  realmConfigmapName: aios-keycloak-realm
+  configConfigmapName: aios-keycloak-config
+  passwordsSecretName: aios-keycloak-passwords
+  config:
+    KC_LOG_LEVEL: "info"
+    KC_HEALTH_ENABLED: true
+    KC_METRICS_ENABLED: true
+    KC_FEATURES_DISABLED: "docker,openshift-integration"
+    KC_TRANSACTION_XA_ENABLED: false
+    # KC_HTTP_ENABLED: true
+    # KC_DB: postgres
+    # KC_DB_URL: "jdbc:postgresql://localhost/keycloak"
+    # KC_DB_URL_DATABASE: keycloak
+    # KC_DB_USERNAME: admin
+    # KC_DB_PASSWORD: admin
+    # KC_DB_SCHEMA: public
+    # KEYCLOAK_ADMIN: "admin"
+    # KEYCLOAK_ADMIN_PASSWORD: "admin"
+  command:
+    - "/opt/keycloak/bin/kc.sh"
+    - "start"
+    - "--import-realm"
+    - "--proxy"
+    - "edge"
+  startupProbe:
+    enabled: true
+    initialDelaySeconds: 20
+    failureThreshold: 30
+    periodSeconds: 10
+  readinessProbe:
+    initialDelaySeconds: 0
+  livenessProbe:
+    initialDelaySeconds: 0
+  service:
+    type: ClusterIP
+    port: 80
+  ingress:
+    enabled: true
+    hostname: iam.aios.local
+    annotations: {}
+    # kubernetes.io/ingress.class: nginx
+  podLabels:
+    aios.dev/tenant-id: "AIOS"
+  # resources:
+  #   limits:
+  #     cpu: 1000m
+  #     memory: 1024Mi
+  #   requests:
+  #     cpu: 500m
+  #     memory: 512Mi
+  metrics:
+    enabled: false
+    service:
+      annotations: {}
+    serviceMonitor:
+      enabled: true
+      additionalLabels: {}
+      # Enable by setting it to the release name in order to be picked up by prometheus.
+      # release: aios
+  postgresql:
+    enabled: false
+  externalDatabase:
+    existingSecret: aios-postgresql-password
+    existingSecretPasswordKey: postgresql-password
+  initContainers:
+    - name: "keycloak-realm-setup"
+      image: python:3.9.13-alpine3.16
+      imagePullPolicy: IfNotPresent
+      command:
+        - sh
+        - -c
+        - printf "$REPLACE_SCRIPT" > /tmp/replace.py && chmod a+x /tmp/replace.py && cp /tmp/realms/keycloak-aios.json /opt/keycloak/data/import/keycloak-aios.json && /tmp/replace.py /opt/keycloak/data/import/keycloak-aios.json
+      env:
+        - name: REPLACE_SCRIPT
+          value: |
+            #!/usr/bin/env python3
+            import os
+            import re
+            import sys
+            file = sys.argv[1]
+            with open(file, "r+") as f:
+                text = f.read()
+                for k, v in dict(filter(lambda e: e[0].startswith("AIOS_REALM_"), os.environ.items())).items():
+                    print(f"Replacing variable {k}")
+                    text = re.sub("\$\{" + k + "\}", v, text)
+                f.seek(0)
+                f.write(text)
+                f.truncate()
+        - name: AIOS_REALM_AIOS_REDIRECT_URI_1
+          valueFrom:
+            configMapKeyRef:
+              name: aios-urls
+              key: aios-realm-redirect-url
+        - name: AIOS_REALM_GRAFANA_REDIRECT_URI_1
+          valueFrom:
+            configMapKeyRef:
+              name: aios-urls
+              key: grafana-realm-redirect-url
+        - name: AIOS_REALM_GRAFANA_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: aios-keycloak-passwords
+              key: grafana-client-secret
+        - name: AIOS_REALM_SMTP_FROM_NAME
+          valueFrom:
+            secretKeyRef:
+              name: aios-smtp-config
+              key: AIOS_SMTP_FROM_NAME
+        - name: AIOS_REALM_SMTP_FROM_ADDRESS
+          valueFrom:
+            secretKeyRef:
+              name: aios-smtp-config
+              key: AIOS_SMTP_FROM_ADDRESS
+        - name: AIOS_REALM_SMTP_REPLY_ADDRESS
+          valueFrom:
+            secretKeyRef:
+              name: aios-smtp-config
+              key: AIOS_SMTP_REPLY_ADDRESS
+        - name: AIOS_REALM_SMTP_HOST
+          valueFrom:
+            secretKeyRef:
+              name: aios-smtp-config
+              key: AIOS_SMTP_HOST
+        - name: AIOS_REALM_SMTP_PORT
+          valueFrom:
+            secretKeyRef:
+              name: aios-smtp-config
+              key: AIOS_SMTP_PORT
+        - name: AIOS_REALM_SMTP_AUTH
+          valueFrom:
+            secretKeyRef:
+              name: aios-smtp-config
+              key: AIOS_SMTP_AUTH
+        - name: AIOS_REALM_SMTP_SSL
+          value: "false"
+        - name: AIOS_REALM_SMTP_STARTTLS
+          valueFrom:
+            secretKeyRef:
+              name: aios-smtp-config
+              key: AIOS_SMTP_STARTTLS
+        - name: AIOS_REALM_SMTP_USER
+          valueFrom:
+            secretKeyRef:
+              name: aios-smtp-config
+              key: AIOS_SMTP_USER
+        - name: AIOS_REALM_SMTP_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: aios-smtp-config
+              key: AIOS_SMTP_PASSWORD
+      volumeMounts:
+        - name: realm-import-dir
+          mountPath: /opt/keycloak/data/import
+        - name: realm
+          mountPath: /tmp/realms
+    - name: "keycloak-database-creation"
+      image: bitnami/postgresql:11.13.0-debian-10-r90
+      imagePullPolicy: IfNotPresent
+      command:
+        - sh
+        - -c
+        - |-
+          until PGPASSWORD="$KEYCLOAK_INIT_DATABASE_PASSWORD" pg_isready -h $KEYCLOAK_DATABASE_HOST -p $KEYCLOAK_DATABASE_PORT -U $KEYCLOAK_INIT_DATABASE_USER; do echo "Waiting for postgres to be available..."; sleep 2; done
+          echo "Creating database $KEYCLOAK_DATABASE_NAME if not exists..."
+          PGPASSWORD="$KEYCLOAK_INIT_DATABASE_PASSWORD" psql -h $KEYCLOAK_DATABASE_HOST -p $KEYCLOAK_DATABASE_PORT -U $KEYCLOAK_INIT_DATABASE_USER -d $KEYCLOAK_INIT_DATABASE_NAME -c "SELECT 1 FROM pg_database WHERE datname = '$KEYCLOAK_DATABASE_NAME'" | grep -q 1 || PGPASSWORD="$KEYCLOAK_INIT_DATABASE_PASSWORD" psql -h $KEYCLOAK_DATABASE_HOST -p $KEYCLOAK_DATABASE_PORT -U $KEYCLOAK_INIT_DATABASE_USER -d $KEYCLOAK_INIT_DATABASE_NAME -c "CREATE DATABASE $KEYCLOAK_DATABASE_NAME"
+          echo "Creating user $KC_DB_USERNAME if not exists..."
+          PGPASSWORD="$KEYCLOAK_INIT_DATABASE_PASSWORD" psql -h $KEYCLOAK_DATABASE_HOST -p $KEYCLOAK_DATABASE_PORT -U $KEYCLOAK_INIT_DATABASE_USER -d $KEYCLOAK_INIT_DATABASE_NAME -c "SELECT 1 FROM pg_user WHERE usename = '$KC_DB_USERNAME'" | grep -q 1 || PGPASSWORD="$KEYCLOAK_INIT_DATABASE_PASSWORD" psql -h $KEYCLOAK_DATABASE_HOST -p $KEYCLOAK_DATABASE_PORT -U $KEYCLOAK_INIT_DATABASE_USER -d $KEYCLOAK_INIT_DATABASE_NAME -c "CREATE USER $KC_DB_USERNAME WITH ENCRYPTED PASSWORD '$KC_DB_PASSWORD'"
+          PGPASSWORD="$KEYCLOAK_INIT_DATABASE_PASSWORD" psql -h $KEYCLOAK_DATABASE_HOST -p $KEYCLOAK_DATABASE_PORT -U $KEYCLOAK_INIT_DATABASE_USER -d $KEYCLOAK_INIT_DATABASE_NAME -c "GRANT ALL PRIVILEGES ON DATABASE $KEYCLOAK_DATABASE_NAME to $KC_DB_USERNAME"
+      envFrom:
+        - secretRef:
+            name: aios-keycloak-database-init
+        - secretRef:
+            name: aios-keycloak-database
+      env:
+        - name: KEYCLOAK_INIT_DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: aios-postgresql-password
+              key: postgresql-postgres-password
+  extraEnvVarsCM: aios-keycloak-config
+  extraEnvVarsSecret: aios-keycloak-database
+  extraEnvVars:
+    - name: KEYCLOAK_ADMIN
+      valueFrom:
+        secretKeyRef:
+          name: aios-keycloak-passwords
+          key: admin-user
+    - name: KEYCLOAK_ADMIN_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: aios-keycloak-passwords
+          key: admin-password
+  extraVolumeMounts:
+    - name: realm-import-dir
+      mountPath: /opt/keycloak/data/import
+    - name: themes
+      mountPath: /opt/keycloak/themes/keycloak-aios
+  extraVolumes:
+    - name: realm-import-dir
+      emptyDir: {}
+    - name: realm
+      configMap:
+        name: aios-keycloak-realm
+    - name: themes
+      configMap:
+        name: aios-keycloak-theme
+        items:
+          - key: themes.keycloak-aios.account.resources.css.style.css
+            path: account/resources/css/style.css
+          - key: themes.keycloak-aios.account.theme.properties
+            path: account/theme.properties
+          - key: themes.keycloak-aios.common.resources.css.global.css
+            path: common/resources/css/global.css
+          - key: themes.keycloak-aios.common.resources.img.illustration.svg
+            path: common/resources/img/illustration.svg
+          - key: themes.keycloak-aios.common.resources.img.logo.svg
+            path: common/resources/img/logo.svg
+          - key: themes.keycloak-aios.login.resources.css.style.css
+            path: login/resources/css/style.css
+          - key: themes.keycloak-aios.login.theme.properties
+            path: login/theme.properties
+
+
+# Deploy prometheus for kubernetes with the included helm chart from https://artifacthub.io/packages/helm/prometheus-community/kube-prometheus-stack
+kube-prometheus-stack:
+  enabled: true
+  nameOverride: "prometheus"
+  grafana:
+    enabled: true
+    image:
+      repository: grafana/grafana
+      tag: 8.5.10
+    # Dashboards to be deployed when kube-prometheus-stack.grafana.extraConfigmapMounts is configured.
+    aiosDashboards:
+      - aios-app.json
+      - aios-database.json
+      - aios-services.json
+      - aios-loadbalancer.json
+      - aios-logs.json
+      - aios-metrics.json
+    aiosConfig: aios-grafana-config
+    adminPassword: ""
+    admin:
+      existingSecret: aios-grafana-password
+      userKey: admin-user
+      passwordKey: admin-password
+    persistence:
+      enabled: true
+      size: 5Gi
+      inMemory:
+        enabled: false
+    useInternalUrlForOauth: false
+    env:
+      GF_LOG_MODE: "console"
+      GF_LOG_LEVEL: "info"
+      GF_AUTH_GENERIC_OAUTH_ENABLED: "true"
+      GF_AUTH_GENERIC_OAUTH_ALLOW_SIGN_UP: "true"
+      GF_AUTH_GENERIC_OAUTH_TLS_SKIP_VERIFY_INSECURE: "false"
+    envValueFrom:
+      GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET:
+        secretKeyRef:
+          name: aios-keycloak-passwords
+          key: grafana-client-secret
+      GF_SERVER_ROOT_URL:
+        configMapKeyRef:
+          name: aios-grafana-config
+          key: GF_SERVER_ROOT_URL
+      GF_AUTH_GENERIC_OAUTH_NAME:
+        configMapKeyRef:
+          name: aios-grafana-config
+          key: GF_AUTH_GENERIC_OAUTH_NAME
+      GF_AUTH_GENERIC_OAUTH_CLIENT_ID:
+        configMapKeyRef:
+          name: aios-grafana-config
+          key: GF_AUTH_GENERIC_OAUTH_CLIENT_ID
+      GF_AUTH_GENERIC_OAUTH_SCOPES:
+        configMapKeyRef:
+          name: aios-grafana-config
+          key: GF_AUTH_GENERIC_OAUTH_SCOPES
+      GF_AUTH_GENERIC_OAUTH_AUTH_URL:
+        configMapKeyRef:
+          name: aios-grafana-config
+          key: GF_AUTH_GENERIC_OAUTH_AUTH_URL
+      GF_AUTH_GENERIC_OAUTH_TOKEN_URL:
+        configMapKeyRef:
+          name: aios-grafana-config
+          key: GF_AUTH_GENERIC_OAUTH_TOKEN_URL
+      GF_AUTH_GENERIC_OAUTH_API_URL:
+        configMapKeyRef:
+          name: aios-grafana-config
+          key: GF_AUTH_GENERIC_OAUTH_API_URL
+    service:
+      port: 80
+    ingress:
+      enabled: true
+      annotations: {}
+        # kubernetes.io/ingress.class: nginx
+      hosts:
+        - grafana.aios.local
+      path: /
+    plugins: []
+      # - grafana-clock-panel
+    defaultDashboardsEnabled: true
+    dashboardProviders:
+      dashboardproviders.yaml:
+        apiVersion: 1
+        providers:
+        - name: "aios"
+          orgId: 1
+          folder: "AIOS"
+          folderUid: "aios"
+          type: file
+          disableDeletion: true
+          updateIntervalSeconds: 30
+          allowUiUpdates: false
+          options:
+            path: /tmp/aios/dashboards
+    ## Configure grafana datasources
+    ## ref: http://docs.grafana.org/administration/provisioning/#datasources
+    ##
+    datasources:
+      datasources.yaml:
+        apiVersion: 1
+        datasources:
+          - name: Loki AIOS
+            type: loki
+            uid: loki-aios
+            url: http://{{ printf "%s-loki" .Release.Name }}:3100
+            orgId: 1 # The equivalent of the super tenant
+            isDefault: false
+            jsonData:
+              manageAlerts: false
+              httpHeaderName1: "X-Scope-OrgID"
+            secureJsonData:
+              httpHeaderValue1: "AIOS"
+            editable: false
+    extraConfigmapMounts:
+      - name: aios-grafana-dashboards
+        mountPath: /tmp/aios/dashboards
+        configMap: aios-grafana-dashboards
+    podLabels:
+      aios.dev/tenant-id: "AIOS"
+    # resources:
+    #   limits:
+    #     cpu: 1000m
+    #     memory: 1024Mi
+    #   requests:
+    #     cpu: 200m
+    #     memory: 512Mi
+  kubeStateMetrics:
+    enabled: true
+    # resources:
+    #   limits:
+    #     cpu: 20m
+    #     memory: 64Mi
+    #   requests:
+    #     cpu: 10m
+    #     memory: 32Mi
+  nodeExporter:
+    enabled: true
+    # resources:
+    #   limits:
+    #     cpu: 25m
+    #     memory: 64Mi
+    #   requests:
+    #     cpu: 10m
+    #     memory: 32Mi
+  prometheusOperator:
+    enabled: true
+    # resources:
+    #   limits:
+    #     cpu: 200m
+    #     memory: 256Mi
+    #   requests:
+    #     cpu: 100m
+    #     memory: 128Mi
+  prometheus:
+    enabled: true
+    service:
+      port: 9090
+    prometheusSpec:
+      retention: 30d
+      serviceMonitorSelectorNilUsesHelmValues: true
+      podMonitorSelectorNilUsesHelmValues: true
+      # resources:
+      #   limits:
+      #     cpu: 2000m
+      #     memory: 4Gi
+      #   requests:
+      #     cpu: 100m
+      #     memory: 256Mi
+  alertmanager:
+    enabled: false
+  kubeApiServer:
+    enabled: false
+  kubelet:
+    enabled: true
+  kubeControllerManager:
+    enabled: false
+  coreDns:
+    enabled: false
+  kubeEtcd:
+    enabled: false
+  kubeScheduler:
+    enabled: false
+  kubeProxy:
+    enabled: false
+
+
+# Deploy loki with the included helm chart from https://artifacthub.io/packages/helm/grafana/loki-stack
+loki-stack:
+  enabled: true
+  loki:
+    enabled: true
+    image:
+      repository: grafana/loki
+      tag: 2.3.0
+    config:
+      auth_enabled: true # Enables multi tenancy
+    service:
+      port: 3100
+    serviceAccount:
+      create: true
+    serviceMonitor:
+      enabled: false
+      interval: 20s
+      additionalLabels: {}
+        # release: aios
+    # resources:
+    #   limits:
+    #     cpu: 1000m
+    #     memory: 1024Gi
+    #   requests:
+    #     cpu: 100m
+    #     memory: 128Mi
+  promtail:
+    enabled: true
+    image:
+      repository: grafana/promtail
+      tag: 2.3.0
+    serviceAccount:
+      create: true
+    serviceMonitor:
+      enabled: false
+      interval: 20s
+      labels: {}
+        # release: aios
+    pipelineStages:
+      - tenant:
+          source: aios_dev_tenant_id # Feed logs depending on the tenant (uses label aios.dev/tenant-id to determine the tenant id)
+    # resources:
+    #   limits:
+    #     cpu: 250m
+    #     memory: 512Mi
+    #   requests:
+    #     cpu: 200m
+    #     memory: 128Mi
+  grafana:
+    enabled: false
+    persistence:
+      inMemory:
+        enabled: false
+    sidecar:
+      datasources:
+        enabled: false
+  prometheus:
+    enabled: false
