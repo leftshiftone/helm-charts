@@ -34,6 +34,41 @@ entries:
     version: 1.0.0
   semantic-search:
   - apiVersion: v2
+    appVersion: 1.1.1
+    created: "2022-12-02T09:59:36.390615754Z"
+    dependencies:
+    - condition: semantic-search-indexer.enabled
+      name: semantic-search-indexer
+      repository: https://charts.leftshift.one
+      version: 1.1.1
+    - condition: semantic-search-searcher.enabled
+      name: semantic-search-searcher
+      repository: https://charts.leftshift.one
+      version: 1.1.1
+    - condition: eck-operator.enabled
+      name: eck-operator
+      repository: https://helm.elastic.co
+      version: 2.4.0
+    - condition: prometheus-elasticsearch-exporter.enabled
+      name: prometheus-elasticsearch-exporter
+      repository: https://prometheus-community.github.io/helm-charts
+      version: 4.13.0
+    - condition: minio.enabled
+      name: minio
+      repository: https://charts.min.io
+      version: 4.0.8
+    description: A Helm chart for Kubernetes
+    digest: ca1ef356e944a2681926645ff1df494c64617dfe60e266c070ee0eef8c607a0d
+    maintainers:
+    - email: contact@leftshift.one
+      name: LEFTSHIFT ONE Software GmbH
+      url: https://www.leftshift.one
+    name: semantic-search
+    type: application
+    urls:
+    - https://github.com/leftshiftone/helm-charts/releases/download/semantic-search-1.1.1/semantic-search-1.1.1.tgz
+    version: 1.1.1
+  - apiVersion: v2
     appVersion: 1.1.0
     created: "2022-11-03T21:58:12.405262356Z"
     dependencies:
@@ -252,4 +287,4 @@ entries:
     urls:
     - https://github.com/leftshiftone/helm-charts/releases/download/semantic-search-searcher-0.1.0/semantic-search-searcher-0.1.0.tgz
     version: 0.1.0
-generated: "2022-12-02T09:44:38.048441384Z"
+generated: "2022-12-02T09:59:36.390942558Z"
