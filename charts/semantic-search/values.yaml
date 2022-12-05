@@ -137,11 +137,11 @@ minio:
       existingSecret: semantic-search-minio-passwords
       existingSecretKey: indexerPassword
       policy: indexer
-    - accessKey: connector
-      # secretKey: connectorsecret
+    - accessKey: searcher
+      # secretKey: searchersecret
       existingSecret: semantic-search-minio-passwords
-      existingSecretKey: connectorPassword
-      policy: connector
+      existingSecretKey: searcherPassword
+      policy: searcher
   policies:
     - name: indexer
       statements:
@@ -157,7 +157,7 @@ minio:
             - "s3:ListMultipartUploadParts"
             - "s3:AbortMultipartUpload"
             - "s3:GetObject"
-    - name: connector
+    - name: searcher
       statements:
         - resources:
             - "arn:aws:s3:::*/*"
