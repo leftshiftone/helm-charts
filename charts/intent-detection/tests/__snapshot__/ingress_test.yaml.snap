@@ -1,0 +1,18 @@
+default:
+  1: |
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: intent-detection
+    app.kubernetes.io/version: 0.0.0
+    helm.sh/chart: intent-detection-0.0.0
+  2: |
+    null
+  3: |
+    rules:
+    - host: intent-detection.local
+      http:
+        paths:
+        - backend:
+            serviceName: RELEASE-NAME-intent-detection-app
+            servicePort: 80
+          path: /

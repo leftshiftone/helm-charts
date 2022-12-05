@@ -1,0 +1,121 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "intent-detection.fullname" . }}-app
+  labels:
+    {{- include "intent-detection.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "intent-detection.selectorLabels" . | nindent 6 }}
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- include "intent-detection.configChecksum" . | nindent 8 }}
+      labels:
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        application: {{ include "intent-detection.name" . }}
+        {{- include "intent-detection.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "intent-detection.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- if .Values.app.waitForSemanticSearch }}
+      initContainers:
+        {{- if .Values.app.waitForSemanticSearch }}
+        - name: {{ .Chart.Name }}-semantic-search-searcher-check
+          image: curlimages/curl:7.84.0
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - 'until curl --fail --silent --output /dev/null $SEMANTIC_SEARCH_SEARCHER_URL/health; do echo "Waiting for semantic search searcher to be available at $SEMANTIC_SEARCH_SEARCHER_URL/health..."; sleep 3; done'
+          env:
+            - name: $SEMANTIC_SEARCH_SEARCHER_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "intent-detection.fullname" . }}
+                  key: $SEMANTIC_SEARCH_SEARCHER_URL
+        {{- end }}
+        {{- if .Values.app.waitForSemanticSearch }}
+        - name: {{ .Chart.Name }}-semantic-search-indexer-check
+          image: curlimages/curl:7.84.0
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - 'until curl --fail --silent --output /dev/null $SEMANTIC_SEARCH_INDEXER_URL/health; do echo "Waiting for semantic search indexer to be available at $SEMANTIC_SEARCH_INDEXER_URL/health..."; sleep 3; done'
+          env:
+            - name: $SEMANTIC_SEARCH_INDEXER_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "intent-detection.fullname" . }}
+                  key: $SEMANTIC_SEARCH_INDEXER_URL
+        {{- end }}
+      {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+          startupProbe:
+            {{- toYaml .Values.startupProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "intent-detection.fullname" . }}
+          {{- if and (not .Values.app.config.MINIO_PASSWORD) .Values.app.minioExistingSecret }}
+          env:
+            - name: MINIO_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.app.minioExistingSecret }}
+                  key: {{ .Values.app.minioExistingSecretKey }}
+          {{- end }}
+          {{- if .Values.extraVolumeMounts }}
+          volumeMounts:
+            {{- toYaml .Values.extraVolumeMounts | nindent 12 }}
+          {{- end }}
+      {{- if .Values.extraVolumes }}
+      volumes:
+        {{- toYaml .Values.extraVolumes | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

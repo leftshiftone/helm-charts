@@ -1,0 +1,323 @@
+# Default values for intent-detection.
+# This is a YAML-formatted file.
+
+app:
+  # Specifies configuration of the application
+  config:
+    # Available log levels: DEBUG, INFO, WARNING, ERROR, CRITICAL
+    LOG_LEVEL: "INFO"
+    HTTP_LOG_LEVEL: "WARNING"
+    SEMANTIC_SEARCH_SEARCHER_URL: "http://semantic-search-searcher:8080"
+    SEMANTIC_SEARCH_INDEXER_URL: "http://semantic-search-indexer:8080"
+    MINIO_HOST: "semantic-search-minio:9000"
+    # MINIO_USER: admin
+    # MINIO_PASSWORD: adminadmin
+    # MINIO_IS_TLS: true
+    ENABLE_METRICS: "true"
+  # minioExistingSecret: ""
+  # minioExistingSecretKey: ""
+  waitForSemanticSearch: true
+
+replicaCount: 1
+
+image:
+  repository: 007098893018.dkr.ecr.eu-central-1.amazonaws.com/intent-detection
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podLabels: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: intent-detection.local
+      paths:
+        - path: /
+          port: 80
+          pathType: Prefix
+  tls: []
+  #  - secretName: intent-detection-tls
+  #    hosts:
+  #      - intent-detection.local
+
+podMonitor:
+  enabled: false
+  path: /metrics
+  port: http
+  namespace: ""
+  interval: 10s
+  additionalLabels: {}
+  additionalPodTargetLabels:
+    - application
+    - app_kubernetes_io_instance
+    - app_kubernetes_io_name
+    - app_kubernetes_io_version
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 1000m
+  #   memory: 1024Mi
+  # requests:
+  #   cpu: 500m
+  #   memory: 512Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 9
+  targetCPUUtilizationPercentage: 70
+  # targetMemoryUtilizationPercentage: 70
+
+livenessProbe:
+  httpGet:
+    path: /health
+    port: http
+readinessProbe:
+  httpGet:
+    path: /ready
+    port: http
+startupProbe:
+  httpGet:
+    path: /ready
+    port: http
+  failureThreshold: 30
+  periodSeconds: 10
+
+extraVolumeMounts: []
+  # - mountPath: /debug
+  #   name: host
+  #   readOnly: true
+extraVolumes: []
+  # - name: host
+  #   hostPath:
+  #     path: /host
+  #     type: Directory
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+
+semantic-search:
+  enabled: true
+
+  semantic-search-indexer:
+    enabled: true
+    app:
+      config:
+        LOG_LEVEL: "INFO"
+        ES_URL: "http://semantic-search-elasticsearch:9200"
+        MINIO_HOST: "semantic-search-minio:9000"
+        MINIO_USER: indexer
+        # See the readme on how to upload and mount the model.
+        # MODEL_PATH: "/models/sentence-transformers_paraphrase-multilingual-MiniLM-L12-v2"
+        ENABLE_METRICS: "false"
+      minioExistingSecret: semantic-search-minio-passwords
+      minioExistingSecretKey: indexerPassword
+    resources: {}
+      # limits:
+      #   cpu: 1000m
+      #   memory: 1024Mi
+      # requests:
+      #   cpu: 500m
+      #   memory: 512Mi
+    extraVolumeMounts: []
+      # - mountPath: /models
+      #   name: models
+      #   readOnly: true
+    extraVolumes: []
+      # - name: models
+      #   persistentVolumeClaim:
+      #     claimName: model-volume-claim
+    podMonitor:
+      enabled: false
+      # namespace: monitoring
+      interval: 10s
+      additionalLabels: {}
+
+  semantic-search-searcher:
+    enabled: true
+    app:
+      config:
+        LOG_LEVEL: "INFO"
+        ES_URL: "http://semantic-search-elasticsearch:9200"
+        # See the readme on how to upload and mount the model.
+        # MODEL_PATH: "/models/sentence-transformers_paraphrase-multilingual-MiniLM-L12-v2"
+        ENABLE_METRICS: "false"
+    resources: {}
+      # limits:
+      #   cpu: 1000m
+      #   memory: 1024Mi
+      # requests:
+      #   cpu: 500m
+      #   memory: 512Mi
+    extraVolumeMounts: []
+      # - mountPath: /models
+      #   name: models
+      #   readOnly: true
+    extraVolumes: []
+      # - name: models
+      #   persistentVolumeClaim:
+      #     claimName: model-volume-claim
+    podMonitor:
+      enabled: false
+      # namespace: monitoring
+      interval: 10s
+      additionalLabels: {}
+
+  eck-operator:
+    enabled: true
+    installCRDs: false # First install CRDs: helm upgrade --install esk-operator-crds --version 2.4.0 elastic/eck-operator-crds
+    resources: {}
+      # limits:
+      #   cpu: 1000m
+      #   memory: 1024Mi
+      # requests:
+      #   cpu: 100m
+      #   memory: 150Mi
+
+  elasticsearch:
+    enabled: true
+    version: 8.4.0
+    replicas: 3
+    config: {}
+      # Satisfies bootstrap check "max virtual memory areas vm.max_map_count [65530] is too low, increase to at least [262144]"
+      # node.store.allow_mmap: false
+    resources: {}
+      # limits:
+      #   cpu: 2000m
+      #   memory: 6144Mi
+      # requests:
+      #   cpu: 1000m
+      #   memory: 1024Mi
+    volumeClaimTemplates:
+      - metadata:
+          name: elasticsearch-data # Do not change this name unless you set up a volume mount for the data path.
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 10Gi
+          # storageClassName: default
+
+  prometheus-elasticsearch-exporter:
+    enabled: false
+    es:
+      uri: http://elasticsearch-master:9200
+      all: true
+    resources: {}
+      # limits:
+      #   cpu: 100m
+      #   memory: 256Mi
+      # requests:
+      #   cpu: 10m
+      #   memory: 128Mi
+    serviceMonitor:
+      enabled: false
+      # namespace: monitoring
+      interval: 10s
+      labels: {}
+
+  minio:
+    enabled: true
+    image:
+      tag: RELEASE.2022-07-30T05-21-40Z
+    persistence:
+      enabled: true
+      size: 10G
+    # rootUser: admin
+    # rootPassword: adminadmin
+    users:
+      - accessKey: indexer
+        # secretKey: indexersecret
+        existingSecret: semantic-search-minio-passwords
+        existingSecretKey: indexerPassword
+        policy: indexer
+      - accessKey: searcher
+        # secretKey: searchersecret
+        existingSecret: semantic-search-minio-passwords
+        existingSecretKey: searcherPassword
+        policy: searcher
+    policies:
+      - name: indexer
+        statements:
+          - resources:
+              - "arn:aws:s3:::*/*"
+            actions:
+              # can create buckets and read bucket content
+              - "s3:CreateBucket"
+              - "s3:DeleteBucket"
+              - "s3:GetBucketLocation"
+              - "s3:ListBucket"
+              - "s3:ListBucketMultipartUploads"
+              - "s3:ListMultipartUploadParts"
+              - "s3:AbortMultipartUpload"
+              - "s3:GetObject"
+      - name: searcher
+        statements:
+          - resources:
+              - "arn:aws:s3:::*/*"
+            actions:
+              # can read and write into buckets
+              - "s3:GetBucketLocation"
+              - "s3:ListBucket"
+              - "s3:ListBucketMultipartUploads"
+              - "s3:ListMultipartUploadParts"
+              - "s3:AbortMultipartUpload"
+              - "s3:GetObject"
+              - "s3:DeleteObject"
+              - "s3:PutObject"
+    resources: {}
+      # limits:
+      #   cpu: 1000m
+      #   memory: 1024Mi
+      # requests:
+      #   cpu: 250m
+      #   memory: 256Mi
+    metrics:
+      serviceMonitor:
+        enabled: false
+        # namespace: monitoring
+        interval: 30s
+        additionalLabels: {}

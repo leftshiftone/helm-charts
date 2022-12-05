@@ -1,0 +1,14 @@
+default:
+  1: |
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: intent-detection
+    app.kubernetes.io/version: 0.0.0
+    helm.sh/chart: intent-detection-0.0.0
+  2: |
+    ENABLE_METRICS: "true"
+    HTTP_LOG_LEVEL: WARNING
+    LOG_LEVEL: INFO
+    MINIO_HOST: semantic-search-minio:9000
+    SEMANTIC_SEARCH_INDEXER_URL: http://semantic-search-indexer:8080
+    SEMANTIC_SEARCH_SEARCHER_URL: http://semantic-search-searcher:8080

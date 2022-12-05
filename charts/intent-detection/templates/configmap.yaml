@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "intent-detection.fullname" . }}
+  labels:
+  {{- include "intent-detection.labels" . | nindent 4 }}
+data:
+  # Dynamic config
+  {{- range $key, $val := .Values.app.config }}
+  {{ $key }}: {{ $val | quote }}
+  {{- end }}

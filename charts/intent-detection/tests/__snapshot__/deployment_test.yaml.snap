@@ -1,0 +1,171 @@
+custom values:
+  1: |
+    replicas: 1
+    selector:
+      matchLabels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/name: intent-detection
+    strategy:
+      rollingUpdate:
+        maxSurge: 1
+        maxUnavailable: 0
+      type: RollingUpdate
+    template:
+      metadata:
+        annotations:
+          checksum/config: b4eb5395531bf0daab1cb34436675cec422dd3b68c3f203b2f06becd95216e07
+        labels:
+          app.kubernetes.io/instance: RELEASE-NAME
+          app.kubernetes.io/name: intent-detection
+          application: intent-detection
+      spec:
+        containers:
+        - env:
+          - name: MINIO_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: someKey
+                name: some-thing
+          envFrom:
+          - configMapRef:
+              name: RELEASE-NAME-intent-detection
+          image: 007098893018.dkr.ecr.eu-central-1.amazonaws.com/intent-detection:latest
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+          name: intent-detection
+          ports:
+          - containerPort: 8080
+            name: http
+            protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+          securityContext: {}
+          startupProbe:
+            failureThreshold: 30
+            httpGet:
+              path: /ready
+              port: http
+            periodSeconds: 10
+        initContainers:
+        - command:
+          - sh
+          - -c
+          - until curl --fail --silent --output /dev/null $SEMANTIC_SEARCH_SEARCHER_URL/health;
+            do echo "Waiting for semantic search searcher to be available at $SEMANTIC_SEARCH_SEARCHER_URL/health...";
+            sleep 3; done
+          env:
+          - name: $SEMANTIC_SEARCH_SEARCHER_URL
+            valueFrom:
+              configMapKeyRef:
+                key: $SEMANTIC_SEARCH_SEARCHER_URL
+                name: RELEASE-NAME-intent-detection
+          image: curlimages/curl:7.84.0
+          imagePullPolicy: IfNotPresent
+          name: intent-detection-semantic-search-searcher-check
+        - command:
+          - sh
+          - -c
+          - until curl --fail --silent --output /dev/null $SEMANTIC_SEARCH_INDEXER_URL/health;
+            do echo "Waiting for semantic search indexer to be available at $SEMANTIC_SEARCH_INDEXER_URL/health...";
+            sleep 3; done
+          env:
+          - name: $SEMANTIC_SEARCH_INDEXER_URL
+            valueFrom:
+              configMapKeyRef:
+                key: $SEMANTIC_SEARCH_INDEXER_URL
+                name: RELEASE-NAME-intent-detection
+          image: curlimages/curl:7.84.0
+          imagePullPolicy: IfNotPresent
+          name: intent-detection-semantic-search-indexer-check
+        securityContext: {}
+        serviceAccountName: RELEASE-NAME-intent-detection
+default:
+  1: |
+    replicas: 1
+    selector:
+      matchLabels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/name: intent-detection
+    strategy:
+      rollingUpdate:
+        maxSurge: 1
+        maxUnavailable: 0
+      type: RollingUpdate
+    template:
+      metadata:
+        annotations:
+          checksum/config: b4eb5395531bf0daab1cb34436675cec422dd3b68c3f203b2f06becd95216e07
+        labels:
+          app.kubernetes.io/instance: RELEASE-NAME
+          app.kubernetes.io/name: intent-detection
+          application: intent-detection
+      spec:
+        containers:
+        - envFrom:
+          - configMapRef:
+              name: RELEASE-NAME-intent-detection
+          image: 007098893018.dkr.ecr.eu-central-1.amazonaws.com/intent-detection:0.0.0
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+          name: intent-detection
+          ports:
+          - containerPort: 8080
+            name: http
+            protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http
+          resources: {}
+          securityContext: {}
+          startupProbe:
+            failureThreshold: 30
+            httpGet:
+              path: /ready
+              port: http
+            periodSeconds: 10
+        initContainers:
+        - command:
+          - sh
+          - -c
+          - until curl --fail --silent --output /dev/null $SEMANTIC_SEARCH_SEARCHER_URL/health;
+            do echo "Waiting for semantic search searcher to be available at $SEMANTIC_SEARCH_SEARCHER_URL/health...";
+            sleep 3; done
+          env:
+          - name: $SEMANTIC_SEARCH_SEARCHER_URL
+            valueFrom:
+              configMapKeyRef:
+                key: $SEMANTIC_SEARCH_SEARCHER_URL
+                name: RELEASE-NAME-intent-detection
+          image: curlimages/curl:7.84.0
+          imagePullPolicy: IfNotPresent
+          name: intent-detection-semantic-search-searcher-check
+        - command:
+          - sh
+          - -c
+          - until curl --fail --silent --output /dev/null $SEMANTIC_SEARCH_INDEXER_URL/health;
+            do echo "Waiting for semantic search indexer to be available at $SEMANTIC_SEARCH_INDEXER_URL/health...";
+            sleep 3; done
+          env:
+          - name: $SEMANTIC_SEARCH_INDEXER_URL
+            valueFrom:
+              configMapKeyRef:
+                key: $SEMANTIC_SEARCH_INDEXER_URL
+                name: RELEASE-NAME-intent-detection
+          image: curlimages/curl:7.84.0
+          imagePullPolicy: IfNotPresent
+          name: intent-detection-semantic-search-indexer-check
+        securityContext: {}
+        serviceAccountName: RELEASE-NAME-intent-detection
