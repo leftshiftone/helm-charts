@@ -37,7 +37,7 @@ spec:
       serviceAccountName: {{ include "semantic-search-indexer.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
-      {{- if .Values.app.waitForGrafana }}
+      {{- if or .Values.app.waitForElasticsearch .Values.app.waitForMinio }}
       initContainers:
         {{- if .Values.app.waitForElasticsearch }}
         - name: {{ .Chart.Name }}-elasticsarch-check

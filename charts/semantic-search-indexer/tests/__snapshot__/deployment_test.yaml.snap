@@ -55,6 +55,37 @@ custom values:
               path: /ready
               port: http
             periodSeconds: 10
+        initContainers:
+        - command:
+          - sh
+          - -c
+          - until curl --fail --silent --output /dev/null $ELASTICSEARCH_URL/_cluster/health;
+            do echo "Waiting for elasticsearch to be available at $ELASTICSEARCH_URL/_cluster/health...";
+            sleep 3; done
+          env:
+          - name: ELASTICSEARCH_URL
+            valueFrom:
+              configMapKeyRef:
+                key: ES_URL
+                name: RELEASE-NAME-semantic-search-indexer
+          image: curlimages/curl:7.84.0
+          imagePullPolicy: IfNotPresent
+          name: semantic-search-indexer-elasticsarch-check
+        - command:
+          - sh
+          - -c
+          - until curl --fail --silent --output /dev/null http://$MINIO_HOST/minio/health/live;
+            do echo "Waiting for elasticsearch to be available at http://$MINIO_HOST/minio/health/live...";
+            sleep 3; done
+          env:
+          - name: MINIO_HOST
+            valueFrom:
+              configMapKeyRef:
+                key: MINIO_HOST
+                name: RELEASE-NAME-semantic-search-indexer
+          image: curlimages/curl:7.84.0
+          imagePullPolicy: IfNotPresent
+          name: semantic-search-indexer-minio-check
         securityContext: {}
         serviceAccountName: RELEASE-NAME-semantic-search-indexer
 default:
@@ -105,5 +136,36 @@ default:
               path: /ready
               port: http
             periodSeconds: 10
+        initContainers:
+        - command:
+          - sh
+          - -c
+          - until curl --fail --silent --output /dev/null $ELASTICSEARCH_URL/_cluster/health;
+            do echo "Waiting for elasticsearch to be available at $ELASTICSEARCH_URL/_cluster/health...";
+            sleep 3; done
+          env:
+          - name: ELASTICSEARCH_URL
+            valueFrom:
+              configMapKeyRef:
+                key: ES_URL
+                name: RELEASE-NAME-semantic-search-indexer
+          image: curlimages/curl:7.84.0
+          imagePullPolicy: IfNotPresent
+          name: semantic-search-indexer-elasticsarch-check
+        - command:
+          - sh
+          - -c
+          - until curl --fail --silent --output /dev/null http://$MINIO_HOST/minio/health/live;
+            do echo "Waiting for elasticsearch to be available at http://$MINIO_HOST/minio/health/live...";
+            sleep 3; done
+          env:
+          - name: MINIO_HOST
+            valueFrom:
+              configMapKeyRef:
+                key: MINIO_HOST
+                name: RELEASE-NAME-semantic-search-indexer
+          image: curlimages/curl:7.84.0
+          imagePullPolicy: IfNotPresent
+          name: semantic-search-indexer-minio-check
         securityContext: {}
         serviceAccountName: RELEASE-NAME-semantic-search-indexer

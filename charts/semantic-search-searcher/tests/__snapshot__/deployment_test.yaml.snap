@@ -49,6 +49,22 @@ custom values:
               path: /ready
               port: http
             periodSeconds: 10
+        initContainers:
+        - command:
+          - sh
+          - -c
+          - until curl --fail --silent --output /dev/null $ELASTICSEARCH_URL/_cluster/health;
+            do echo "Waiting for elasticsearch to be available at $ELASTICSEARCH_URL/_cluster/health...";
+            sleep 3; done
+          env:
+          - name: ELASTICSEARCH_URL
+            valueFrom:
+              configMapKeyRef:
+                key: ES_URL
+                name: RELEASE-NAME-semantic-search-searcher
+          image: curlimages/curl:7.84.0
+          imagePullPolicy: IfNotPresent
+          name: semantic-search-searcher-elasticsarch-check
         securityContext: {}
         serviceAccountName: RELEASE-NAME-semantic-search-searcher
 default:
@@ -99,5 +115,21 @@ default:
               path: /ready
               port: http
             periodSeconds: 10
+        initContainers:
+        - command:
+          - sh
+          - -c
+          - until curl --fail --silent --output /dev/null $ELASTICSEARCH_URL/_cluster/health;
+            do echo "Waiting for elasticsearch to be available at $ELASTICSEARCH_URL/_cluster/health...";
+            sleep 3; done
+          env:
+          - name: ELASTICSEARCH_URL
+            valueFrom:
+              configMapKeyRef:
+                key: ES_URL
+                name: RELEASE-NAME-semantic-search-searcher
+          image: curlimages/curl:7.84.0
+          imagePullPolicy: IfNotPresent
+          name: semantic-search-searcher-elasticsarch-check
         securityContext: {}
         serviceAccountName: RELEASE-NAME-semantic-search-searcher
