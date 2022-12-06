@@ -126,6 +126,7 @@ minio:
   enabled: true
   image:
     tag: RELEASE.2022-07-30T05-21-40Z
+  replicas: 1
   persistence:
     enabled: true
     size: 10G
