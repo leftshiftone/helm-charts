@@ -63,10 +63,10 @@ custom values:
             do echo "Waiting for semantic search searcher to be available at $SEMANTIC_SEARCH_SEARCHER_URL/health...";
             sleep 3; done
           env:
-          - name: $SEMANTIC_SEARCH_SEARCHER_URL
+          - name: SEMANTIC_SEARCH_SEARCHER_URL
             valueFrom:
               configMapKeyRef:
-                key: $SEMANTIC_SEARCH_SEARCHER_URL
+                key: SEMANTIC_SEARCH_SEARCHER_URL
                 name: RELEASE-NAME-intent-detection
           image: curlimages/curl:7.84.0
           imagePullPolicy: IfNotPresent
@@ -78,10 +78,10 @@ custom values:
             do echo "Waiting for semantic search indexer to be available at $SEMANTIC_SEARCH_INDEXER_URL/health...";
             sleep 3; done
           env:
-          - name: $SEMANTIC_SEARCH_INDEXER_URL
+          - name: SEMANTIC_SEARCH_INDEXER_URL
             valueFrom:
               configMapKeyRef:
-                key: $SEMANTIC_SEARCH_INDEXER_URL
+                key: SEMANTIC_SEARCH_INDEXER_URL
                 name: RELEASE-NAME-intent-detection
           image: curlimages/curl:7.84.0
           imagePullPolicy: IfNotPresent
@@ -144,10 +144,10 @@ default:
             do echo "Waiting for semantic search searcher to be available at $SEMANTIC_SEARCH_SEARCHER_URL/health...";
             sleep 3; done
           env:
-          - name: $SEMANTIC_SEARCH_SEARCHER_URL
+          - name: SEMANTIC_SEARCH_SEARCHER_URL
             valueFrom:
               configMapKeyRef:
-                key: $SEMANTIC_SEARCH_SEARCHER_URL
+                key: SEMANTIC_SEARCH_SEARCHER_URL
                 name: RELEASE-NAME-intent-detection
           image: curlimages/curl:7.84.0
           imagePullPolicy: IfNotPresent
@@ -159,10 +159,10 @@ default:
             do echo "Waiting for semantic search indexer to be available at $SEMANTIC_SEARCH_INDEXER_URL/health...";
             sleep 3; done
           env:
-          - name: $SEMANTIC_SEARCH_INDEXER_URL
+          - name: SEMANTIC_SEARCH_INDEXER_URL
             valueFrom:
               configMapKeyRef:
-                key: $SEMANTIC_SEARCH_INDEXER_URL
+                key: SEMANTIC_SEARCH_INDEXER_URL
                 name: RELEASE-NAME-intent-detection
           image: curlimages/curl:7.84.0
           imagePullPolicy: IfNotPresent
