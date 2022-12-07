@@ -34,6 +34,25 @@ entries:
     version: 1.0.0
   intent-detection:
   - apiVersion: v2
+    appVersion: 1.2.0
+    created: "2022-12-07T18:40:11.108309199Z"
+    dependencies:
+    - condition: semantic-search.enabled
+      name: semantic-search
+      repository: https://charts.leftshift.one
+      version: 1.1.x
+    description: A Helm chart for Kubernetes
+    digest: 173be09368df1639e670753c08d217ed1943b50997eed014ea3127d4e3cf5417
+    maintainers:
+    - email: contact@leftshift.one
+      name: LEFTSHIFT ONE Software GmbH
+      url: https://www.leftshift.one
+    name: intent-detection
+    type: application
+    urls:
+    - https://github.com/leftshiftone/helm-charts/releases/download/intent-detection-1.2.0/intent-detection-1.2.0.tgz
+    version: 1.2.0
+  - apiVersion: v2
     appVersion: 1.1.0
     created: "2022-12-06T10:29:46.448970029Z"
     dependencies:
@@ -578,4 +597,4 @@ entries:
     urls:
     - https://github.com/leftshiftone/helm-charts/releases/download/semantic-search-searcher-0.1.0/semantic-search-searcher-0.1.0.tgz
     version: 0.1.0
-generated: "2022-12-07T17:44:12.767862291Z"
+generated: "2022-12-07T18:40:11.108521899Z"
