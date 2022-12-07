@@ -36,7 +36,7 @@ custom values:
             protocol: TCP
           readinessProbe:
             httpGet:
-              path: /ready
+              path: /health
               port: http
           resources:
             limits:
@@ -46,7 +46,7 @@ custom values:
           startupProbe:
             failureThreshold: 30
             httpGet:
-              path: /ready
+              path: /health
               port: http
             periodSeconds: 10
         initContainers:
@@ -105,14 +105,14 @@ default:
             protocol: TCP
           readinessProbe:
             httpGet:
-              path: /ready
+              path: /health
               port: http
           resources: {}
           securityContext: {}
           startupProbe:
             failureThreshold: 30
             httpGet:
-              path: /ready
+              path: /health
               port: http
             periodSeconds: 10
         initContainers:
