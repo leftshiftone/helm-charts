@@ -112,11 +112,11 @@ livenessProbe:
     port: http
 readinessProbe:
   httpGet:
-    path: /ready
+    path: /health
     port: http
 startupProbe:
   httpGet:
-    path: /ready
+    path: /health
     port: http
   failureThreshold: 30
   periodSeconds: 10
@@ -205,84 +205,107 @@ semantic-search:
       interval: 10s
       additionalLabels: {}
 
-  eck-operator:
-    enabled: true
-    installCRDs: false # First install CRDs: helm upgrade --install esk-operator-crds --version 2.4.0 elastic/eck-operator-crds
-    resources: {}
-      # limits:
-      #   cpu: 1000m
-      #   memory: 1024Mi
-      # requests:
-      #   cpu: 100m
-      #   memory: 150Mi
+eck-operator:
+  enabled: true
+  installCRDs: false # First install CRDs: helm upgrade --install esk-operator-crds --version 2.5.0 elastic/eck-operator-crds
+  resources: {}
+    # limits:
+    #   cpu: 1000m
+    #   memory: 1024Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 150Mi
 
-  elasticsearch:
-    enabled: true
-    version: 8.4.0
-    replicas: 3
-    config: {}
-      # Satisfies bootstrap check "max virtual memory areas vm.max_map_count [65530] is too low, increase to at least [262144]"
-      # node.store.allow_mmap: false
-    resources: {}
-      # limits:
-      #   cpu: 2000m
-      #   memory: 6144Mi
-      # requests:
-      #   cpu: 1000m
-      #   memory: 1024Mi
-    volumeClaimTemplates:
-      - metadata:
-          name: elasticsearch-data # Do not change this name unless you set up a volume mount for the data path.
-        spec:
-          accessModes:
-            - ReadWriteOnce
-          resources:
-            requests:
-              storage: 10Gi
-          # storageClassName: default
+elasticsearch:
+  enabled: true
+  version: 8.5.0
+  replicas: 3
+  config:
+    xpack.security.enabled: "false"
+    xpack.security.http.ssl.enabled: "false"
+    # Satisfies bootstrap check "max virtual memory areas vm.max_map_count [65530] is too low, increase to at least [262144]"
+    # node.store.allow_mmap: "false"
+  podTemplate:
+    spec:
+      initContainers:
+        - name: sysctl
+          securityContext:
+            privileged: true
+            runAsUser: 0
+          command: ['sh', '-c', 'sysctl -w vm.max_map_count=262144']
+      containers:
+        - name: elasticsearch
+          env:
+            - name: READINESS_PROBE_PROTOCOL
+              value: http
+          resources: {}
+            # limits:
+            #   cpu: 2000m
+            #   memory: 6144Mi
+            # requests:
+            #   cpu: 1000m
+            #   memory: 1024Mi
+  volumeClaimTemplates:
+    - metadata:
+        name: elasticsearch-data # Do not change this name unless you set up a volume mount for the data path.
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi
+        # storageClassName: default
 
-  prometheus-elasticsearch-exporter:
+
+prometheus-elasticsearch-exporter:
+  enabled: false
+  es:
+    uri: http://elasticsearch-master:9200
+    all: true
+  resources: {}
+    # limits:
+    #   cpu: 100m
+    #   memory: 256Mi
+    # requests:
+    #   cpu: 10m
+    #   memory: 128Mi
+  serviceMonitor:
     enabled: false
-    es:
-      uri: http://elasticsearch-master:9200
-      all: true
-    resources: {}
-      # limits:
-      #   cpu: 100m
-      #   memory: 256Mi
-      # requests:
-      #   cpu: 10m
-      #   memory: 128Mi
-    serviceMonitor:
-      enabled: false
-      # namespace: monitoring
-      interval: 10s
-      labels: {}
+    # namespace: monitoring
+    interval: 10s
+    labels: {}
 
-  minio:
+
+minio:
+  enabled: true
+  image:
+    repository: bitnami/minio
+    tag: 2022.12.7-debian-11-r0
+  mode: standalone # Possible values: standalone and distributed
+  statefulset:
+    replicaCount: 1 # Should be even and >= 4 in distributed mode
+  # auth:
+  #   rootUser: admin
+  #   rootPassword: adminadmin
+  persistence:
     enabled: true
-    image:
-      tag: RELEASE.2022-07-30T05-21-40Z
-    persistence:
-      enabled: true
-      size: 10G
-    # rootUser: admin
-    # rootPassword: adminadmin
+    size: 10G
+  provisioning:
+    enabled: true
     users:
-      - accessKey: indexer
-        # secretKey: indexersecret
-        existingSecret: semantic-search-minio-passwords
-        existingSecretKey: indexerPassword
-        policy: indexer
-      - accessKey: searcher
-        # secretKey: searchersecret
-        existingSecret: semantic-search-minio-passwords
-        existingSecretKey: searcherPassword
-        policy: searcher
+      - username: indexer
+        password: indexerindexer
+        policies:
+          - indexer
+      - username: connector
+        password: connectorconnector
+        policies:
+          - connector
     policies:
       - name: indexer
         statements:
-          - resources:
+          - effect: "Allow"
+            resources:
               - "arn:aws:s3:::*/*"
             actions:
               # can create buckets and read bucket content
@@ -294,9 +317,10 @@ semantic-search:
               - "s3:ListMultipartUploadParts"
               - "s3:AbortMultipartUpload"
               - "s3:GetObject"
-      - name: searcher
+      - name: connector
         statements:
-          - resources:
+          - effect: "Allow"
+            resources:
               - "arn:aws:s3:::*/*"
             actions:
               # can read and write into buckets
@@ -315,9 +339,16 @@ semantic-search:
       # requests:
       #   cpu: 250m
       #   memory: 256Mi
-    metrics:
-      serviceMonitor:
-        enabled: false
-        # namespace: monitoring
-        interval: 30s
-        additionalLabels: {}
+  resources: {}
+    # limits:
+    #   cpu: 1000m
+    #   memory: 1024Mi
+    # requests:
+    #   cpu: 250m
+    #   memory: 256Mi
+  metrics:
+    serviceMonitor:
+      enabled: false
+      # namespace: monitoring
+      interval: 30s
+      additionalLabels: {}

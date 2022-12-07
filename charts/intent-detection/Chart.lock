@@ -1,6 +1,6 @@
 dependencies:
 - name: semantic-search
   repository: https://charts.leftshift.one
-  version: 1.1.4
-digest: sha256:375d43e61d87c7467f8a8fe1e87a1796b3922cb6b957caa67765a8c2a4db7c78
-generated: "2022-12-06T10:28:47.003334439Z"
+  version: 1.1.5
+digest: sha256:1e15e4db2788a4108fd715333586c953a1ce1084548769ce5b868d745de19d94
+generated: "2022-12-07T18:45:28.333143574+01:00"
