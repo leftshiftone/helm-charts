@@ -68,7 +68,7 @@ semantic-search-searcher:
 # See https://www.elastic.co/guide/en/cloud-on-k8s/2.4/k8s-install-helm.html for more information
 eck-operator:
   enabled: true
-  installCRDs: false # First install CRDs: helm upgrade --install esk-operator-crds --version 2.4.0 elastic/eck-operator-crds
+  installCRDs: false # First install CRDs: helm upgrade --install esk-operator-crds --version 2.5.0 elastic/eck-operator-crds
   resources: {}
     # limits:
     #   cpu: 1000m
@@ -79,18 +79,33 @@ eck-operator:
 
 elasticsearch:
   enabled: true
-  version: 8.4.0
+  version: 8.5.0
   replicas: 3
-  config: {}
+  config:
+    xpack.security.enabled: "false"
+    xpack.security.http.ssl.enabled: "false"
     # Satisfies bootstrap check "max virtual memory areas vm.max_map_count [65530] is too low, increase to at least [262144]"
-    # node.store.allow_mmap: false
-  resources: {}
-    # limits:
-    #   cpu: 2000m
-    #   memory: 6144Mi
-    # requests:
-    #   cpu: 1000m
-    #   memory: 1024Mi
+    # node.store.allow_mmap: "false"
+  podTemplate:
+    spec:
+      initContainers:
+        - name: sysctl
+          securityContext:
+            privileged: true
+            runAsUser: 0
+          command: ['sh', '-c', 'sysctl -w vm.max_map_count=262144']
+      containers:
+        - name: elasticsearch
+          env:
+            - name: READINESS_PROBE_PROTOCOL
+              value: http
+          resources: {}
+            # limits:
+            #   cpu: 2000m
+            #   memory: 6144Mi
+            # requests:
+            #   cpu: 1000m
+            #   memory: 1024Mi
   volumeClaimTemplates:
     - metadata:
         name: elasticsearch-data # Do not change this name unless you set up a volume mount for the data path.
@@ -125,53 +140,66 @@ prometheus-elasticsearch-exporter:
 minio:
   enabled: true
   image:
-    tag: RELEASE.2022-07-30T05-21-40Z
-  replicas: 1
+    repository: bitnami/minio
+    tag: 2022.12.7-debian-11-r0
+  mode: standalone # Possible values: standalone and distributed
+  statefulset:
+    replicaCount: 1 # Should be even and >= 4 in distributed mode
+  # auth:
+  #   rootUser: admin
+  #   rootPassword: adminadmin
   persistence:
     enabled: true
     size: 10G
-  # rootUser: admin
-  # rootPassword: adminadmin
-  users:
-    - accessKey: indexer
-      # secretKey: indexersecret
-      existingSecret: semantic-search-minio-passwords
-      existingSecretKey: indexerPassword
-      policy: indexer
-    - accessKey: searcher
-      # secretKey: searchersecret
-      existingSecret: semantic-search-minio-passwords
-      existingSecretKey: searcherPassword
-      policy: searcher
-  policies:
-    - name: indexer
-      statements:
-        - resources:
-            - "arn:aws:s3:::*/*"
-          actions:
-            # can create buckets and read bucket content
-            - "s3:CreateBucket"
-            - "s3:DeleteBucket"
-            - "s3:GetBucketLocation"
-            - "s3:ListBucket"
-            - "s3:ListBucketMultipartUploads"
-            - "s3:ListMultipartUploadParts"
-            - "s3:AbortMultipartUpload"
-            - "s3:GetObject"
-    - name: searcher
-      statements:
-        - resources:
-            - "arn:aws:s3:::*/*"
-          actions:
-            # can read and write into buckets
-            - "s3:GetBucketLocation"
-            - "s3:ListBucket"
-            - "s3:ListBucketMultipartUploads"
-            - "s3:ListMultipartUploadParts"
-            - "s3:AbortMultipartUpload"
-            - "s3:GetObject"
-            - "s3:DeleteObject"
-            - "s3:PutObject"
+  provisioning:
+    enabled: true
+    users:
+      - username: indexer
+        password: indexerindexer
+        policies:
+          - indexer
+      - username: connector
+        password: connectorconnector
+        policies:
+          - connector
+    policies:
+      - name: indexer
+        statements:
+          - effect: "Allow"
+            resources:
+              - "arn:aws:s3:::*/*"
+            actions:
+              # can create buckets and read bucket content
+              - "s3:CreateBucket"
+              - "s3:DeleteBucket"
+              - "s3:GetBucketLocation"
+              - "s3:ListBucket"
+              - "s3:ListBucketMultipartUploads"
+              - "s3:ListMultipartUploadParts"
+              - "s3:AbortMultipartUpload"
+              - "s3:GetObject"
+      - name: connector
+        statements:
+          - effect: "Allow"
+            resources:
+              - "arn:aws:s3:::*/*"
+            actions:
+              # can read and write into buckets
+              - "s3:GetBucketLocation"
+              - "s3:ListBucket"
+              - "s3:ListBucketMultipartUploads"
+              - "s3:ListMultipartUploadParts"
+              - "s3:AbortMultipartUpload"
+              - "s3:GetObject"
+              - "s3:DeleteObject"
+              - "s3:PutObject"
+    resources: {}
+      # limits:
+      #   cpu: 1000m
+      #   memory: 1024Mi
+      # requests:
+      #   cpu: 250m
+      #   memory: 256Mi
   resources: {}
     # limits:
     #   cpu: 1000m

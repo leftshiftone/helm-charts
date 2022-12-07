@@ -6,10 +6,14 @@ metadata:
 spec:
   version: {{ .Values.elasticsearch.version | quote }}
   nodeSets:
-    - name: semantic-search
+    - name: {{ .Release.Name }}
       count: {{ .Values.elasticsearch.replicas }}
       {{- with .Values.elasticsearch.config }}
       config:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.elasticsearch.podTemplate }}
+      podTemplate:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- with .Values.elasticsearch.volumeClaimTemplates }}

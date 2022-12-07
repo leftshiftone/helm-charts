@@ -5,8 +5,27 @@ default:
         node:
           store:
             allow_mmap: false
+        xpack.security.enabled: "false"
+        xpack.security.http.ssl.enabled: "false"
       count: 3
-      name: semantic-search
+      name: RELEASE-NAME
+      podTemplate:
+        spec:
+          containers:
+          - env:
+            - name: READINESS_PROBE_PROTOCOL
+              value: http
+            name: elasticsearch
+            resources: {}
+          initContainers:
+          - command:
+            - sh
+            - -c
+            - sysctl -w vm.max_map_count=262144
+            name: sysctl
+            securityContext:
+              privileged: true
+              runAsUser: 0
       volumeClaimTemplates:
       - metadata:
           name: elasticsearch-data
@@ -16,4 +35,4 @@ default:
           resources:
             requests:
               storage: 10Gi
-    version: 8.4.0
+    version: 8.5.0
