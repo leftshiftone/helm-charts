@@ -5,6 +5,15 @@ metadata:
   labels:
   {{- include "intent-detection.labels" . | nindent 4 }}
 data:
+  {{- if not (hasKey .Values.app.config "SEMANTIC_SEARCH_SEARCHER_URL") }}
+  SEMANTIC_SEARCH_SEARCHER_URL: "http://semantic-search-searcher:8080"
+  {{- end }}
+  {{- if not (hasKey .Values.app.config "SEMANTIC_SEARCH_INDEXER_URL") }}
+  SEMANTIC_SEARCH_INDEXER_URL: "http://semantic-search-indexer:8080"
+  {{- end }}
+  {{- if not (hasKey .Values.app.config "MINIO_HOST") }}
+  MINIO_HOST: "{{ .Release.Name }}-minio:9000"
+  {{- end }}
   # Dynamic config
   {{- range $key, $val := .Values.app.config }}
   {{ $key }}: {{ $val | quote }}

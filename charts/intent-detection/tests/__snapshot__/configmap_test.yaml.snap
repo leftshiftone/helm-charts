@@ -9,6 +9,6 @@ default:
     ENABLE_METRICS: "true"
     HTTP_LOG_LEVEL: WARNING
     LOG_LEVEL: INFO
-    MINIO_HOST: semantic-search-minio:9000
+    MINIO_HOST: RELEASE-NAME-minio:9000
     SEMANTIC_SEARCH_INDEXER_URL: http://semantic-search-indexer:8080
     SEMANTIC_SEARCH_SEARCHER_URL: http://semantic-search-searcher:8080

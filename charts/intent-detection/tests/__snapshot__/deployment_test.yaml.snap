@@ -13,7 +13,7 @@ custom values:
     template:
       metadata:
         annotations:
-          checksum/config: b4eb5395531bf0daab1cb34436675cec422dd3b68c3f203b2f06becd95216e07
+          checksum/config: 1fef7e968908b94f089d9f485c35e8266c5fe508d5f4dfdd61c09f4a3f9e4c69
         labels:
           app.kubernetes.io/instance: RELEASE-NAME
           app.kubernetes.io/name: intent-detection
@@ -103,7 +103,7 @@ default:
     template:
       metadata:
         annotations:
-          checksum/config: b4eb5395531bf0daab1cb34436675cec422dd3b68c3f203b2f06becd95216e07
+          checksum/config: 1fef7e968908b94f089d9f485c35e8266c5fe508d5f4dfdd61c09f4a3f9e4c69
         labels:
           app.kubernetes.io/instance: RELEASE-NAME
           app.kubernetes.io/name: intent-detection
