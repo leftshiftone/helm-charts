@@ -10,6 +10,6 @@ tests:
           of: Elasticsearch
       - equal:
           path: metadata.name
-          value: semantic-search-elasticsearch
+          value: RELEASE-NAME-elasticsearch
       - matchSnapshot:
           path: spec
