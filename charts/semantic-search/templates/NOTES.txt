@@ -5,11 +5,5 @@ LEFTSHIFT ONE Software GmbH
 support@leftshift.one
 https://www.leftshift.one
 
-{{- if and .Values.minio.enabled (and .Values.minio.users (first .Values.minio.users).existingSecret) }}
-
-Get the passwords for the minio users (base64 encoded):
-  kubectl get secret --namespace {{ .Release.Namespace }} {{ (first .Values.minio.users).existingSecret }}
-{{- end }}
-
 Show this information with:
   helm get notes {{ .Release.Name }}
