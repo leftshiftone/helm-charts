@@ -7,9 +7,11 @@ app:
     # Available log levels: DEBUG, INFO, WARNING, ERROR, CRITICAL
     LOG_LEVEL: "INFO"
     HTTP_LOG_LEVEL: "WARNING"
-    ES_URL: "http://semantic-search-elasticsearch:9200"
-    MINIO_HOST: "semantic-search-minio:9000"
-    # MINIO_USER: admin
+    # URL will be set automatically but can be overridden.
+    # ES_URL: "http://semantic-search-elasticsearch-es-http:9200"
+    # Host will be set automatically but can be overridden.
+    # MINIO_HOST: "semantic-search-minio:9000"
+    MINIO_USER: indexer
     # MINIO_PASSWORD: adminadmin
     # MINIO_IS_TLS: true
     # MODEL_PATH: "/models/sentence-transformers_paraphrase-multilingual-MiniLM-L12-v2"

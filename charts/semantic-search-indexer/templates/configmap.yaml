@@ -5,6 +5,12 @@ metadata:
   labels:
   {{- include "semantic-search-indexer.labels" . | nindent 4 }}
 data:
+  {{- if not (hasKey .Values.app.config "ES_URL") }}
+  ES_URL: "http://{{ .Release.Name }}-elasticsearch-es-http:9200"
+  {{- end }}
+  {{- if not (hasKey .Values.app.config "MINIO_HOST") }}
+  MINIO_HOST: "{{ .Release.Name }}-minio:9000"
+  {{- end }}
   # Dynamic config
   {{- range $key, $val := .Values.app.config }}
   {{ $key }}: {{ $val | quote }}

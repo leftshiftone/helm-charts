@@ -7,6 +7,6 @@ default:
     helm.sh/chart: semantic-search-searcher-0.0.0
   2: |
     ENABLE_METRICS: "true"
-    ES_URL: http://semantic-search-elasticsearch:9200
+    ES_URL: http://RELEASE-NAME-elasticsearch-es-http:9200
     HTTP_LOG_LEVEL: WARNING
     LOG_LEVEL: INFO

@@ -13,7 +13,7 @@ custom values:
     template:
       metadata:
         annotations:
-          checksum/config: 89821d3599327337cfe017747b12ab7cea6a816756b83bbbb6e79353df6a5727
+          checksum/config: 1fef7e968908b94f089d9f485c35e8266c5fe508d5f4dfdd61c09f4a3f9e4c69
         labels:
           app.kubernetes.io/instance: RELEASE-NAME
           app.kubernetes.io/name: semantic-search-searcher
@@ -82,7 +82,7 @@ default:
     template:
       metadata:
         annotations:
-          checksum/config: 89821d3599327337cfe017747b12ab7cea6a816756b83bbbb6e79353df6a5727
+          checksum/config: 1fef7e968908b94f089d9f485c35e8266c5fe508d5f4dfdd61c09f4a3f9e4c69
         labels:
           app.kubernetes.io/instance: RELEASE-NAME
           app.kubernetes.io/name: semantic-search-searcher

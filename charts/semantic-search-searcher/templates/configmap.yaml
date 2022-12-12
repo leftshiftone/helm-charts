@@ -5,6 +5,9 @@ metadata:
   labels:
   {{- include "semantic-search-searcher.labels" . | nindent 4 }}
 data:
+  {{- if not (hasKey .Values.app.config "ES_URL") }}
+  ES_URL: "http://{{ .Release.Name }}-elasticsearch-es-http:9200"
+  {{- end }}
   # Dynamic config
   {{- range $key, $val := .Values.app.config }}
   {{ $key }}: {{ $val | quote }}

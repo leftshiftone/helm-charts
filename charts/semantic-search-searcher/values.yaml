@@ -7,7 +7,8 @@ app:
     # Available log levels: DEBUG, INFO, WARNING, ERROR, CRITICAL
     LOG_LEVEL: "INFO"
     HTTP_LOG_LEVEL: "WARNING"
-    ES_URL: "http://semantic-search-elasticsearch:9200"
+    # URL will be set automatically but can be overridden.
+    # ES_URL: "http://semantic-search-elasticsearch-es-http:9200"
     # MODEL_PATH: "/models/sentence-transformers_paraphrase-multilingual-MiniLM-L12-v2"
     ENABLE_METRICS: "true"
   waitForElasticsearch: true
