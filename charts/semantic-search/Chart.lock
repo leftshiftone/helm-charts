@@ -1,10 +1,10 @@
 dependencies:
 - name: semantic-search-indexer
   repository: https://charts.leftshift.one
-  version: 1.1.7
+  version: 1.1.8
 - name: semantic-search-searcher
   repository: https://charts.leftshift.one
-  version: 1.1.7
+  version: 1.1.8
 - name: eck-operator
   repository: https://helm.elastic.co
   version: 2.5.0
@@ -14,5 +14,5 @@ dependencies:
 - name: minio
   repository: https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami
   version: 11.10.21
-digest: sha256:e06a5c7ea0fc80a09063114ddd89d1add92a57ea82e4a65a53a7bc3f3316e87b
-generated: "2022-12-12T09:40:38.774391392Z"
+digest: sha256:a7af238f320972e0a1d9ee1b8d8c8d58e3d8ba70cfb98b38df87b238f7dc47f8
+generated: "2022-12-13T10:26:44.502215945Z"

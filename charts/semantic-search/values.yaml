@@ -147,9 +147,12 @@ minio:
   mode: standalone # Possible values: standalone and distributed
   statefulset:
     replicaCount: 1 # Should be even and >= 4 in distributed mode
-  # auth:
+  # todo: set automatically with secret
+  auth:
   #   rootUser: admin
   #   rootPassword: adminadmin
+  #   existingSecret: ""
+    existingSecret: semantic-search-minio-root-secret
   persistence:
     enabled: true
     size: 10G
