@@ -29,6 +29,7 @@ app:
   smtpConfigSecretName: aios-smtp-config
   urlsConfigMapName: aios-urls
   waitForDatabase: true
+  waitForAmqp: true
   waitForKeycloak: true
   waitForGrafana: true
 
@@ -73,16 +74,21 @@ securityContext: {}
 
 service:
   type: ClusterIP
+  port: 80
 
 ingress:
   enabled: false
   className: ""
-  annotations: {}
+  annotations:
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
   hosts:
     - host: aios.local
       paths:
+        - path: /amqp
+          port: 15670
+          pathType: Exact
+          serviceName: '{{ printf "%s-rabbitmq" (include "aios.fullname" .) }}'
         - path: /
           port: 80
           pathType: Prefix
@@ -162,40 +168,50 @@ postgresql:
   image:
     registry: docker.io
     repository: bitnami/postgresql
-    tag: 11.13.0-debian-10-r90
-  postgresqlDatabase: aios
-  postgresqlUsername: admin
-  # If left empty a random password will be created in a secret with the name specified below. If a specific password
-  # should be used, the existingSecret needs to be set to an empty string or needs to be commented out.
-  postgresqlPassword: ""
-  postgresqlPostgresPassword: ""
-  existingSecret: aios-postgresql-password
-  persistence:
-    enabled: true
-    size: 5Gi
-  service:
-    port: 5432
-  # securityContext:
-  #   fsGroup: 0
+    tag: 15.1.0-debian-11-r4
+  auth:
+    enablePostgresUser: true
+    postgresPassword: ""
+    username: admin
+    # If left empty a random password will be created in a secret with the name specified below. If a specific password
+    # should be used, the existingSecret needs to be set to an empty string or needs to be commented out.
+    password: ""
+    database: aios
+    existingSecret: aios-postgresql-passwords
+    secretKeys:
+      adminPasswordKey: postgresql-postgres-password
+      userPasswordKey: postgresql-password
+    usePasswordFiles: false
+  primary:
+    persistence:
+      enabled: true
+      size: 5Gi
+    service:
+      ports:
+        postgresql: 5432
+    podLabels:
+      aios.dev/tenant-id: "AIOS"
+    # podSecurityContext:
+    #   fsGroup: 0
+    # resources:
+    #   limits:
+    #     cpu: 1000m
+    #     memory: 1024Mi
+    #   requests:
+    #     cpu: 250m
+    #     memory: 256Mi
   # volumePermissions:
   #   enabled: true
   #   securityContext:
   #     runAsUser: 0
   #   image:
   #     pullPolicy: IfNotPresent
-  # resources:
-  #   limits:
-  #     cpu: 1000m
-  #     memory: 1024Mi
-  #   requests:
-  #     cpu: 250m
-  #     memory: 256Mi
   metrics:
     enabled: false
     serviceMonitor:
       enabled: true
       interval: 10s
-      additionalLabels: {}
+      labels: {}
         # Enable by setting it to the release name in order to be picked up by prometheus.
         # release: aios
     # resources:
@@ -205,155 +221,159 @@ postgresql:
     #   requests:
     #     cpu: 250m
     #     memory: 256Mi
-  primary:
-    podLabels:
-      aios.dev/tenant-id: "AIOS"
 
 
-# Deploy emqx for kubernetes with the included helm chart from https://github.com/emqx/emqx/tree/v4.2.14/deploy/charts/emqx
-emqx:
+# Deploy postgres with the included helm chart from https://artifacthub.io/packages/helm/bitnami/rabbitmq
+rabbitmq:
   enabled: true
   image:
-    repository: emqx/emqx
-    tag: 4.2.14
-    pullPolicy: IfNotPresent
+    registry: docker.io
+    repository: bitnami/rabbitmq
+    tag: 3.11.6-debian-11-r0
   replicaCount: 1
-  persistence:
+  auth:
+    username: admin
+    # If left empty a random password will be created in a secret with the name specified below. If a specific password
+    # should be used, the existingPasswordSecret needs to be set to an empty string or needs to be commented out.
+    password: ""
+    existingPasswordSecret: aios-rabbitmq-passwords
+    # If left empty a random cookie value will be created in a secret with the name specified below. If a specific erlang cookie value
+    # should be used, the existingErlangSecret needs to be set to an empty string or needs to be commented out.
+    erlangCookie: ""
+    existingErlangSecret: aios-rabbitmq-passwords
+  plugins: "rabbitmq_management rabbitmq_peer_discovery_k8s"
+  extraPlugins: "rabbitmq_auth_backend_http rabbitmq_auth_backend_cache rabbitmq_prometheus"
+  clustering:
     enabled: false
-    existingClaim: ""
-    mountPath: /opt/emqx/data
-    subPath: ""
-    accessModes:
-      - ReadWriteOnce
-    size: 256Mi
-    annotations: {}
-    selector: {}
+  terminationGracePeriodSeconds: 30
+  containerPorts:
+    amqp: 5672
+    amqpTls: 5671
+    dist: 25672
+    manager: 15672
+    epmd: 4369
+    metrics: 9419
+  extraConfiguration: |-
+    log.console = true
+    log.console.level = info
+    default_vhost = aios
+    auth_backends.1 = internal
+    auth_backends.2 = http
+    auth_http.http_method = post
+    auth_http.user_path = http://{{ .Release.Name }}-app/api/v1/authenticate/rabbitmq/user
+    auth_http.vhost_path = http://{{ .Release.Name }}-app/api/v1/authenticate/rabbitmq/vhost
+    auth_http.resource_path = http://{{ .Release.Name }}-app/api/v1/authenticate/rabbitmq/resource
+    auth_http.topic_path = http://{{ .Release.Name }}-app/api/v1/authenticate/rabbitmq/topic
   podLabels:
     aios.dev/tenant-id: "AIOS"
-  resources: {}
-    # limits:
-    #   cpu: 1000m
-    #   memory: 1024Mi
-    # requests:
-    #   cpu: 200m
-    #   memory: 256Mi
-  config:
-    EMQX_LOG__TO: console
-    EMQX_LOG__LEVEL: warning
-    EMQX_LISTENER__TCP__EXTERNAL: 1883
-    EMQX_LISTENER__WS__EXTERNAL: 8083
-    EMQX_LISTENER__WS__EXTERNAL__MQTT_PATH: "/mqtt"
-    EMQX_ALLOW_ANONYMOUS: false
-    EMQX_ACL_NOMATCH: deny
-    EMQX_ACL_FILE: "etc/acl.conf"
-    EMQX_LOADED_PLUGINS: "emqx_auth_mnesia,emqx_auth_http"
-    EMQX_AUTH__MNESIA__PASSWORD_HASH: sha256
-    EMQX_AUTH__MNESIA__1__LOGIN: "admin"
-    EMQX_AUTH__MNESIA__1__IS_SUPERUSER: "true"
-    EMQX_AUTH__HTTP__AUTH_REQ__CONTENT_TYPE: "json"
-    EMQX_AUTH__HTTP__AUTH_REQ__PARAMS: "token=%P"
-    EMQX_AUTH__HTTP__ACL_REQ: ""
-    EMQX_AUTH__HTTP__ACL_REQ__METHOD: ""
-    EMQX_AUTH__HTTP__ACL_REQ__PARAMS: ""
-    EMQX_DASHBOARD__LISTENER__HTTP: 18083
-    EMQX_DASHBOARD__DEFAULT_USER__LOGIN: "admin"
-    EMQX_CLUSTER__K8S__ADDRESS_TYPE: hostname
-    EMQX_CLUSTER__K8S__APISERVER: https://kubernetes.default.svc:443
-    EMQX_CLUSTER__K8S__SUFFIX: svc.cluster.local
-  acl: |
-    {allow, {user, "admin"}, subscribe, ["$SYS/#"]}. {allow, {user, "admin"}, publish, ["aios/users/+/notifications"]}. {allow, all, subscribe, ["aios/users/%u/notifications"]}. {allow, {user, "dashboard"}, subscribe, ["$SYS/#"]}. {allow, {ipaddr, "127.0.0.1"}, pubsub, ["$SYS/#", "#"]}. {deny, all}.
-  envFromSecret: aios-emqx-secret
-  serviceAccount:
-    # Specifies whether a service account should be created
-    create: true
-    # Annotations to add to the service account
-    annotations: {}
-    # The name of the service account to use.
-    # If not set and create is true, a name is generated using the fullname template
-    name: ""
-  ingress:
-    broker:
-      enabled: true
-      className: ""
-      annotations: {}
-        # kubernetes.io/ingress.class: nginx
-        # kubernetes.io/tls-acme: "true"
-      hosts:
-        - host: aios.local
-          paths:
-            - path: /mqtt
-              port: 8083
-              pathType: Exact
-      tls: []
-        #  - secretName: aios-tls
-        #    hosts:
-        #      - aios.local
-    dashboard:
-      enabled: false
-      className: ""
-      annotations: {}
-        # kubernetes.io/ingress.class: nginx
-        # kubernetes.io/tls-acme: "true"
-      hosts:
-        - host: aios.local
-          paths:
-            - path: /mqtt/dashboard
-              port: 18083
-              pathType: ImplementationSpecific
-      tls: []
-        #  - secretName: aios-tls
-        #    hosts:
-        #      - aios.local
-    api:
-      enabled: false
-      className: ""
-      annotations: {}
-        # kubernetes.io/ingress.class: nginx
-        # kubernetes.io/tls-acme: "true"
-      hosts:
-        - host: aios.local
-          paths:
-            - path: /mqtt/api
-              port: 8081
-              pathType: ImplementationSpecific
-      tls: []
-        #  - secretName: aios-tls
-        #    hosts:
-        #      - aios.local
-  service:
-    type: ClusterIP
-    mqtt: 1883
-    ws: 8083
-    mgmt: 8081
-    dashboard: 18083
-  imagePullSecrets: []
-  podAnnotations: {}
-  podSecurityContext:
-    fsGroup: 0
-    fsGroupChangePolicy: Always
-    runAsUser: 0
-    supplementalGroups:
-      - 0
-  securityContext: {}
-    # capabilities:
-    #   drop:
-    #   - ALL
-    # readOnlyRootFilesystem: true
-    # runAsNonRoot: true
-    # runAsUser: 1000
-  extraVolumeMounts: []
-    # - mountPath: /debug
-    #   name: host
-    #   readOnly: true
-  extraVolumes: []
-    # - name: host
-    #   hostPath:
-    #     path: /host
-    #     type: Directory
+  affinity: {}
   nodeSelector: {}
   tolerations: []
-  affinity: {}
+  # podSecurityContext:
+  #   enabled: true
+  #   fsGroup: 1001
+  # containerSecurityContext:
+  #   enabled: true
+  #   runAsUser: 1001
+  #   runAsNonRoot: true
+  # resources:
+  #   limits:
+  #     cpu: 1000m
+  #     memory: 1000M
+  #   requests:
+  #     cpu: 250m
+  #     memory: 250M
+  livenessProbe:
+    enabled: true
+    initialDelaySeconds: 120
+    timeoutSeconds: 20
+    periodSeconds: 30
+    failureThreshold: 6
+    successThreshold: 1
+  readinessProbe:
+    enabled: true
+    initialDelaySeconds: 10
+    timeoutSeconds: 20
+    periodSeconds: 30
+    failureThreshold: 3
+    successThreshold: 1
+  startupProbe:
+    enabled: true
+    initialDelaySeconds: 10
+    timeoutSeconds: 20
+    periodSeconds: 30
+    failureThreshold: 3
+    successThreshold: 1
   initContainers: []
+  sidecars:
+    - name: websocket
+      image: cloudamqp/websocket-tcp-relay:v1.0.6
+      args: ["--upstream=tcp://localhost:5672", "--bind=0.0.0.0", "--port=15670"]
+      imagePullPolicy: IfNotPresent
+      ports:
+        - name: websocket
+          containerPort: 15670
+      livenessProbe:
+        tcpSocket:
+          port: 15670
+      readinessProbe:
+        tcpSocket:
+          port: 15670
+      startupProbe:
+        tcpSocket:
+          port: 15670
+      resources:
+        limits:
+          cpu: 500m
+          memory: 250M
+        requests:
+          cpu: 250m
+          memory: 250M
+  persistence:
+    enabled: false
+    storageClass: ""
+    accessModes:
+      - ReadWriteOnce
+    existingClaim: ""
+    mountPath: /bitnami/rabbitmq/mnesia
+    subPath: ""
+    size: 1G
+  service:
+    type: ClusterIP
+    portEnabled: true
+    distPortEnabled: true
+    managerPortEnabled: true
+    ports:
+      amqp: 5672
+      amqpTls: 5671
+      dist: 25672
+      manager: 15672
+      metrics: 9419
+      epmd: 4369
+    extraPorts:
+      - name: websocket
+        port: 15670
+        targetPort: 15670
+  ingress:
+    enabled: false
+  metrics:
+    enabled: false
+    plugins: "rabbitmq_prometheus"
+    serviceMonitor:
+      enabled: true
+      namespace: ""
+      interval: 30s
+      scrapeTimeout: ""
+      relabelings: []
+      metricRelabelings: []
+      honorLabels: false
+      targetLabels: {}
+      podTargetLabels: {}
+      path: ""
+      selector: {}
+      labels: {}
+      annotations: {}
+      rules: []
 
 
 # Deploy keycloak with the included helm chart from https://artifacthub.io/packages/helm/bitnami/keycloak
@@ -362,7 +382,7 @@ keycloak:
   image:
     registry: quay.io
     repository: keycloak/keycloak
-    tag: 20.0.1
+    tag: 20.0.3
   themeConfigmapName: aios-keycloak-theme
   realmConfigmapName: aios-keycloak-realm
   configConfigmapName: aios-keycloak-config
@@ -426,11 +446,11 @@ keycloak:
   postgresql:
     enabled: false
   externalDatabase:
-    existingSecret: aios-postgresql-password
+    existingSecret: aios-postgresql-passwords
     existingSecretPasswordKey: postgresql-password
   initContainers:
     - name: "keycloak-realm-setup"
-      image: python:3.9.13-alpine3.16
+      image: python:3.9-alpine
       imagePullPolicy: IfNotPresent
       command:
         - sh
@@ -520,7 +540,7 @@ keycloak:
         - name: realm
           mountPath: /tmp/realms
     - name: "keycloak-database-creation"
-      image: bitnami/postgresql:11.13.0-debian-10-r90
+      image: bitnami/postgresql:15.1.0-debian-11-r4
       imagePullPolicy: IfNotPresent
       command:
         - sh
@@ -528,10 +548,11 @@ keycloak:
         - |-
           until PGPASSWORD="$KEYCLOAK_INIT_DATABASE_PASSWORD" pg_isready -h $KEYCLOAK_DATABASE_HOST -p $KEYCLOAK_DATABASE_PORT -U $KEYCLOAK_INIT_DATABASE_USER; do echo "Waiting for postgres to be available..."; sleep 2; done
           echo "Creating database $KEYCLOAK_DATABASE_NAME if not exists..."
-          PGPASSWORD="$KEYCLOAK_INIT_DATABASE_PASSWORD" psql -h $KEYCLOAK_DATABASE_HOST -p $KEYCLOAK_DATABASE_PORT -U $KEYCLOAK_INIT_DATABASE_USER -d $KEYCLOAK_INIT_DATABASE_NAME -c "SELECT 1 FROM pg_database WHERE datname = '$KEYCLOAK_DATABASE_NAME'" | grep -q 1 || PGPASSWORD="$KEYCLOAK_INIT_DATABASE_PASSWORD" psql -h $KEYCLOAK_DATABASE_HOST -p $KEYCLOAK_DATABASE_PORT -U $KEYCLOAK_INIT_DATABASE_USER -d $KEYCLOAK_INIT_DATABASE_NAME -c "CREATE DATABASE $KEYCLOAK_DATABASE_NAME"
+          PGPASSWORD="$KEYCLOAK_INIT_DATABASE_PASSWORD" psql -h $KEYCLOAK_DATABASE_HOST -p $KEYCLOAK_DATABASE_PORT -U $KEYCLOAK_INIT_DATABASE_USER -c "SELECT 1 FROM pg_database WHERE datname = '$KEYCLOAK_DATABASE_NAME'" | grep -q 1 || PGPASSWORD="$KEYCLOAK_INIT_DATABASE_PASSWORD" psql -h $KEYCLOAK_DATABASE_HOST -p $KEYCLOAK_DATABASE_PORT -U $KEYCLOAK_INIT_DATABASE_USER -c "CREATE DATABASE $KEYCLOAK_DATABASE_NAME"
           echo "Creating user $KC_DB_USERNAME if not exists..."
-          PGPASSWORD="$KEYCLOAK_INIT_DATABASE_PASSWORD" psql -h $KEYCLOAK_DATABASE_HOST -p $KEYCLOAK_DATABASE_PORT -U $KEYCLOAK_INIT_DATABASE_USER -d $KEYCLOAK_INIT_DATABASE_NAME -c "SELECT 1 FROM pg_user WHERE usename = '$KC_DB_USERNAME'" | grep -q 1 || PGPASSWORD="$KEYCLOAK_INIT_DATABASE_PASSWORD" psql -h $KEYCLOAK_DATABASE_HOST -p $KEYCLOAK_DATABASE_PORT -U $KEYCLOAK_INIT_DATABASE_USER -d $KEYCLOAK_INIT_DATABASE_NAME -c "CREATE USER $KC_DB_USERNAME WITH ENCRYPTED PASSWORD '$KC_DB_PASSWORD'"
-          PGPASSWORD="$KEYCLOAK_INIT_DATABASE_PASSWORD" psql -h $KEYCLOAK_DATABASE_HOST -p $KEYCLOAK_DATABASE_PORT -U $KEYCLOAK_INIT_DATABASE_USER -d $KEYCLOAK_INIT_DATABASE_NAME -c "GRANT ALL PRIVILEGES ON DATABASE $KEYCLOAK_DATABASE_NAME to $KC_DB_USERNAME"
+          PGPASSWORD="$KEYCLOAK_INIT_DATABASE_PASSWORD" psql -h $KEYCLOAK_DATABASE_HOST -p $KEYCLOAK_DATABASE_PORT -U $KEYCLOAK_INIT_DATABASE_USER -c "SELECT 1 FROM pg_user WHERE usename = '$KC_DB_USERNAME'" | grep -q 1 || PGPASSWORD="$KEYCLOAK_INIT_DATABASE_PASSWORD" psql -h $KEYCLOAK_DATABASE_HOST -p $KEYCLOAK_DATABASE_PORT -U $KEYCLOAK_INIT_DATABASE_USER -c "CREATE USER $KC_DB_USERNAME WITH ENCRYPTED PASSWORD '$KC_DB_PASSWORD'"
+          PGPASSWORD="$KEYCLOAK_INIT_DATABASE_PASSWORD" psql -h $KEYCLOAK_DATABASE_HOST -p $KEYCLOAK_DATABASE_PORT -U $KEYCLOAK_INIT_DATABASE_USER -d $KEYCLOAK_DATABASE_NAME -c "GRANT ALL PRIVILEGES ON DATABASE $KEYCLOAK_DATABASE_NAME to $KC_DB_USERNAME"
+          PGPASSWORD="$KEYCLOAK_INIT_DATABASE_PASSWORD" psql -h $KEYCLOAK_DATABASE_HOST -p $KEYCLOAK_DATABASE_PORT -U $KEYCLOAK_INIT_DATABASE_USER -d $KEYCLOAK_DATABASE_NAME -c "GRANT ALL ON SCHEMA public TO $KC_DB_USERNAME;"
       envFrom:
         - secretRef:
             name: aios-keycloak-database-init
@@ -541,7 +562,7 @@ keycloak:
         - name: KEYCLOAK_INIT_DATABASE_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: aios-postgresql-password
+              name: aios-postgresql-passwords
               key: postgresql-postgres-password
   extraEnvVarsCM: aios-keycloak-config
   extraEnvVarsSecret: aios-keycloak-database
@@ -585,6 +606,8 @@ keycloak:
             path: login/resources/css/style.css
           - key: themes.keycloak-aios.login.theme.properties
             path: login/theme.properties
+  cache:
+    enabled: false
 
 
 # Deploy prometheus for kubernetes with the included helm chart from https://artifacthub.io/packages/helm/prometheus-community/kube-prometheus-stack
@@ -595,16 +618,19 @@ kube-prometheus-stack:
     enabled: true
     image:
       repository: grafana/grafana
-      tag: 8.5.10
+      tag: 9.3.4
     # Dashboards to be deployed when kube-prometheus-stack.grafana.extraConfigmapMounts is configured.
     aiosDashboards:
       - aios-app.json
       - aios-database.json
-      - aios-services.json
+      - aios-amqp.json
       - aios-loadbalancer.json
       - aios-logs.json
       - aios-metrics.json
+      - aios-services.json
     aiosConfig: aios-grafana-config
+    # If left empty a random password will be created in a secret with the name specified below. If a specific password
+    # should be used, the existingSecret needs to be set to an empty string or needs to be commented out.
     adminPassword: ""
     admin:
       existingSecret: aios-grafana-password
@@ -703,6 +729,7 @@ kube-prometheus-stack:
     extraConfigmapMounts:
       - name: aios-grafana-dashboards
         mountPath: /tmp/aios/dashboards
+        subPath: ""
         configMap: aios-grafana-dashboards
     podLabels:
       aios.dev/tenant-id: "AIOS"
@@ -780,7 +807,7 @@ loki-stack:
     enabled: true
     image:
       repository: grafana/loki
-      tag: 2.3.0
+      tag: 2.7.1
     config:
       auth_enabled: true # Enables multi tenancy
     service:
@@ -803,7 +830,7 @@ loki-stack:
     enabled: true
     image:
       repository: grafana/promtail
-      tag: 2.3.0
+      tag: 2.7.1
     serviceAccount:
       create: true
     serviceMonitor:

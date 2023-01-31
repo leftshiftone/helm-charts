@@ -1,10 +1,12 @@
 {
+  "__inputs": [],
+  "__elements": {},
   "__requires": [
     {
       "type": "grafana",
       "id": "grafana",
       "name": "Grafana",
-      "version": "8.5.10"
+      "version": "9.3.4"
     },
     {
       "type": "panel",
@@ -50,12 +52,14 @@
   "gnetId": 14114,
   "graphTooltip": 1,
   "id": null,
-  "iteration": 1661436893161,
   "links": [],
   "liveNow": false,
   "panels": [
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -109,15 +113,18 @@
         "text": {},
         "textMode": "name"
       },
-      "pluginVersion": "8.5.10",
+      "pluginVersion": "9.3.4",
       "targets": [
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
           "expr": "pg_static",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "{{short_version}}",
-          "refId": "A",
-          "datasource": "Prometheus"
+          "refId": "A"
         }
       ],
       "title": "Version",
@@ -164,7 +171,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "8.5.10",
+      "pluginVersion": "9.3.4",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -175,6 +182,9 @@
       "targets": [
         {
           "alias": "fetched",
+          "datasource": {
+            "uid": "$datasource"
+          },
           "dsType": "prometheus",
           "exemplar": true,
           "expr": "sum(irate(pg_stat_database_tup_fetched{datname=~\"$db\",pod=~\"$instance\"}[5m]))",
@@ -227,13 +237,13 @@
               "operator": "=~",
               "value": "/^$instance$/"
             }
-          ],
-          "datasource": {
-            "uid": "$datasource"
-          }
+          ]
         },
         {
           "alias": "fetched",
+          "datasource": {
+            "uid": "$datasource"
+          },
           "dsType": "prometheus",
           "exemplar": true,
           "expr": "sum(irate(pg_stat_database_tup_returned{datname=~\"$db\",pod=~\"$instance\"}[5m]))",
@@ -286,13 +296,13 @@
               "operator": "=~",
               "value": "/^$instance$/"
             }
-          ],
-          "datasource": {
-            "uid": "$datasource"
-          }
+          ]
         },
         {
           "alias": "fetched",
+          "datasource": {
+            "uid": "$datasource"
+          },
           "dsType": "prometheus",
           "exemplar": true,
           "expr": "sum(irate(pg_stat_database_tup_inserted{datname=~\"$db\",pod=~\"$instance\"}[5m]))",
@@ -345,13 +355,13 @@
               "operator": "=~",
               "value": "/^$instance$/"
             }
-          ],
-          "datasource": {
-            "uid": "$datasource"
-          }
+          ]
         },
         {
           "alias": "fetched",
+          "datasource": {
+            "uid": "$datasource"
+          },
           "dsType": "prometheus",
           "exemplar": true,
           "expr": "sum(irate(pg_stat_database_tup_updated{datname=~\"$db\",pod=~\"$instance\"}[5m]))",
@@ -404,13 +414,13 @@
               "operator": "=~",
               "value": "/^$instance$/"
             }
-          ],
-          "datasource": {
-            "uid": "$datasource"
-          }
+          ]
         },
         {
           "alias": "fetched",
+          "datasource": {
+            "uid": "$datasource"
+          },
           "dsType": "prometheus",
           "exemplar": true,
           "expr": "sum(irate(pg_stat_database_tup_deleted{datname=~\"$db\",pod=~\"$instance\"}[5m]))",
@@ -463,10 +473,7 @@
               "operator": "=~",
               "value": "/^$instance$/"
             }
-          ],
-          "datasource": {
-            "uid": "$datasource"
-          }
+          ]
         }
       ],
       "thresholds": [],
@@ -543,7 +550,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "8.5.10",
+      "pluginVersion": "9.3.4",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -554,6 +561,9 @@
       "targets": [
         {
           "alias": "Buffers Allocated",
+          "datasource": {
+            "uid": "$datasource"
+          },
           "dsType": "prometheus",
           "exemplar": true,
           "expr": "irate(pg_stat_bgwriter_buffers_alloc{pod=~'$instance'}[5m])",
@@ -604,13 +614,13 @@
               "operator": "=~",
               "value": "/^$instance$/"
             }
-          ],
-          "datasource": {
-            "uid": "$datasource"
-          }
+          ]
         },
         {
           "alias": "Buffers Allocated",
+          "datasource": {
+            "uid": "$datasource"
+          },
           "dsType": "prometheus",
           "exemplar": true,
           "expr": "irate(pg_stat_bgwriter_buffers_backend_fsync{pod=~'$instance'}[5m])",
@@ -661,13 +671,13 @@
               "operator": "=~",
               "value": "/^$instance$/"
             }
-          ],
-          "datasource": {
-            "uid": "$datasource"
-          }
+          ]
         },
         {
           "alias": "Buffers Allocated",
+          "datasource": {
+            "uid": "$datasource"
+          },
           "dsType": "prometheus",
           "exemplar": true,
           "expr": "irate(pg_stat_bgwriter_buffers_backend{pod=~'$instance'}[5m])",
@@ -718,13 +728,13 @@
               "operator": "=~",
               "value": "/^$instance$/"
             }
-          ],
-          "datasource": {
-            "uid": "$datasource"
-          }
+          ]
         },
         {
           "alias": "Buffers Allocated",
+          "datasource": {
+            "uid": "$datasource"
+          },
           "dsType": "prometheus",
           "exemplar": true,
           "expr": "irate(pg_stat_bgwriter_buffers_clean{pod=~'$instance'}[5m])",
@@ -775,13 +785,13 @@
               "operator": "=~",
               "value": "/^$instance$/"
             }
-          ],
-          "datasource": {
-            "uid": "$datasource"
-          }
+          ]
         },
         {
           "alias": "Buffers Allocated",
+          "datasource": {
+            "uid": "$datasource"
+          },
           "dsType": "prometheus",
           "exemplar": true,
           "expr": "irate(pg_stat_bgwriter_buffers_checkpoint{pod=~'$instance'}[5m])",
@@ -832,10 +842,7 @@
               "operator": "=~",
               "value": "/^$instance$/"
             }
-          ],
-          "datasource": {
-            "uid": "$datasource"
-          }
+          ]
         }
       ],
       "thresholds": [],
@@ -909,7 +916,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "8.5.10",
+      "pluginVersion": "9.3.4",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -920,6 +927,9 @@
       "targets": [
         {
           "alias": "conflicts",
+          "datasource": {
+            "uid": "$datasource"
+          },
           "dsType": "prometheus",
           "exemplar": true,
           "expr": "sum(rate(pg_stat_database_deadlocks{datname=~\"$db\",pod=~\"$instance\"}[5m]))",
@@ -970,13 +980,13 @@
               "operator": "=~",
               "value": "/^$instance$/"
             }
-          ],
-          "datasource": {
-            "uid": "$datasource"
-          }
+          ]
         },
         {
           "alias": "deadlocks",
+          "datasource": {
+            "uid": "$datasource"
+          },
           "dsType": "prometheus",
           "exemplar": true,
           "expr": "sum(rate(pg_stat_database_conflicts{datname=~\"$db\",pod=~\"$instance\"}[5m]))",
@@ -1027,10 +1037,7 @@
               "operator": "=~",
               "value": "/^$instance$/"
             }
-          ],
-          "datasource": {
-            "uid": "$datasource"
-          }
+          ]
         }
       ],
       "thresholds": [],
@@ -1104,7 +1111,7 @@
         "alertThreshold": true
       },
       "percentage": true,
-      "pluginVersion": "8.5.10",
+      "pluginVersion": "9.3.4",
       "pointradius": 1,
       "points": false,
       "renderer": "flot",
@@ -1114,6 +1121,9 @@
       "steppedLine": false,
       "targets": [
         {
+          "datasource": {
+            "uid": "$datasource"
+          },
           "exemplar": true,
           "expr": "sum(pg_stat_database_blks_hit{datname=~\"$db\",pod=~\"$instance\"}) / (sum(pg_stat_database_blks_hit{datname=~\"$db\",pod=~\"$instance\"}) + sum(pg_stat_database_blks_read{datname=~\"$db\",pod=~\"$instance\"}))",
           "format": "time_series",
@@ -1121,10 +1131,7 @@
           "intervalFactor": 2,
           "legendFormat": "cache hit rate",
           "refId": "A",
-          "step": 240,
-          "datasource": {
-            "uid": "$datasource"
-          }
+          "step": 240
         }
       ],
       "thresholds": [],
@@ -1197,7 +1204,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "8.5.10",
+      "pluginVersion": "9.3.4",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1207,6 +1214,9 @@
       "steppedLine": false,
       "targets": [
         {
+          "datasource": {
+            "uid": "$datasource"
+          },
           "exemplar": true,
           "expr": "pg_stat_database_numbackends{datname=~\"$db\",pod=~\"$instance\"}",
           "format": "time_series",
@@ -1214,12 +1224,12 @@
           "intervalFactor": 2,
           "legendFormat": "{{__name__}}",
           "refId": "A",
-          "step": 240,
-          "datasource": {
-            "uid": "$datasource"
-          }
+          "step": 240
         },
         {
+          "datasource": {
+            "uid": "$datasource"
+          },
           "exemplar": true,
           "expr": "pg_settings_max_connections{pod=\"$instance\"}",
           "format": "time_series",
@@ -1228,10 +1238,7 @@
           "interval": "",
           "intervalFactor": 1,
           "legendFormat": "{{__name__}}",
-          "refId": "B",
-          "datasource": {
-            "uid": "$datasource"
-          }
+          "refId": "B"
         }
       ],
       "thresholds": [],
@@ -1267,7 +1274,7 @@
     }
   ],
   "refresh": "5m",
-  "schemaVersion": 36,
+  "schemaVersion": 37,
   "style": "dark",
   "tags": [
     "AIOS"

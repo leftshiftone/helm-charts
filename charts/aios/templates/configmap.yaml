@@ -8,22 +8,16 @@ data:
   {{- if and (not (hasKey .Values.app.config "AIOS_HTTP_DNS_NAME")) .Values.ingress.enabled }}
   AIOS_HTTP_DNS_NAME: {{ (first .Values.ingress.hosts).host | quote }}
   {{- end }}
-  {{- if not (hasKey .Values.app.config "AIOS_K8S_ENABLED") }}
-  AIOS_K8S_ENABLED: "true"
-  {{- end }}
-  {{- if and (not (hasKey .Values.app.config "AIOS_K8S_SERVICE_ACCOUNT_NAME")) .Values.serviceAccount.create}}
-  AIOS_K8S_SERVICE_ACCOUNT_NAME: {{ .Values.serviceAccount.name | default (include "aios.serviceAccountName" .) | quote }}
-  {{- end }}
   # Database
-  {{- $jdbcUrl := printf "jdbc:postgresql://%s-postgresql:5432/%s" (include "aios.fullname" .) .Values.postgresql.postgresqlDatabase -}}
+  {{- $jdbcUrl := printf "jdbc:postgresql://%s-postgresql:5432/%s" (include "aios.fullname" .) .Values.postgresql.auth.database -}}
   {{- if and (not (hasKey .Values.app.config "AIOS_JDBC_URL")) .Values.postgresql.enabled }}
   AIOS_JDBC_URL: {{ $jdbcUrl | quote }}
   {{- end }}
   {{- if and (not (hasKey .Values.app.config "AIOS_JDBC_USERNAME")) .Values.postgresql.enabled }}
-  AIOS_JDBC_USERNAME: {{ .Values.postgresql.postgresqlUsername | quote }}
+  AIOS_JDBC_USERNAME: {{ .Values.postgresql.auth.username | quote }}
   {{- end }}
-  {{- if and (and (not (hasKey .Values.app.config "AIOS_JDBC_PASSWORD")) .Values.postgresql.enabled) .Values.postgresql.postgresqlPassword }}
-  AIOS_JDBC_PASSWORD: {{ .Values.postgresql.postgresqlPassword | quote }}
+  {{- if and (and (not (hasKey .Values.app.config "AIOS_JDBC_PASSWORD")) .Values.postgresql.enabled) .Values.postgresql.auth.password }}
+  AIOS_JDBC_PASSWORD: {{ .Values.postgresql.auth.password | quote }}
   {{- end }}
   # Keycloak
   {{- if not (hasKey .Values.app.config "AIOS_SECURITY_KEYCLOAK_ENABLED") }}
@@ -36,20 +30,17 @@ data:
   {{- if and (and (not (hasKey .Values.app.config "AIOS_SECURITY_KEYCLOAK_SSL_REQUIRED")) .Values.keycloak.enabled) (not .Values.keycloak.ingress.tls) }}
   AIOS_SECURITY_KEYCLOAK_SSL_REQUIRED: "none"
   {{- end }}
-  # MQTT broker config
-  {{- if .Values.emqx.enabled }}
-    {{- if not (hasKey .Values.app.config "AIOS_MQTT_ENABLED") }}
-  AIOS_MQTT_ENABLED: "true"
+  # AMQP broker config
+  {{- if .Values.rabbitmq.enabled }}
+    {{- if not (hasKey .Values.app.config "AIOS_AMQP_ENABLED") }}
+  AIOS_AMQP_ENABLED: "true"
     {{- end }}
-    {{- if not (hasKey .Values.app.config "AIOS_MQTT_HOST") }}
-  AIOS_MQTT_HOST: "{{ .Release.Name }}-emqx"
+    {{- if not (hasKey .Values.app.config "AIOS_AMQP_HOST") }}
+  AIOS_AMQP_HOST: "{{ .Release.Name }}-rabbitmq"
     {{- end }}
-    {{- if not (hasKey .Values.app.config "AIOS_MQTT_PORT") }}
-  AIOS_MQTT_PORT: {{ .Values.emqx.service.mqtt | quote }}
+    {{- if not (hasKey .Values.app.config "AIOS_AMQP_PORT") }}
+  AIOS_AMQP_PORT: {{ .Values.rabbitmq.service.ports.amqp | quote }}
     {{- end }}
-  {{- end }}
-  {{- if and (not (hasKey .Values.app.config "AIOS_MQTT_TOPIC_PREFIX")) (gt (int .Values.replicaCount) 1) }}
-  AIOS_MQTT_TOPIC_PREFIX: "$share/aios/"
   {{- end }}
   # Grafana config
   {{- $kubePrometheusStack := get .Values "kube-prometheus-stack" }}
@@ -69,6 +60,20 @@ data:
   {{- end }}
   {{- if not (hasKey .Values.app.config "AIOS_PROMETHEUS_RELEASE_NAMESPACE") }}
   AIOS_PROMETHEUS_RELEASE_NAMESPACE: {{ .Release.Namespace | quote }}
+  {{- end }}
+  # Kubernetes config
+  {{- if not (hasKey .Values.app.config "AIOS_K8S_ENABLED") }}
+  AIOS_K8S_ENABLED: "true"
+  {{- end }}
+  {{- if and (not (hasKey .Values.app.config "AIOS_K8S_SERVICE_ACCOUNT_NAME")) .Values.serviceAccount.create}}
+  AIOS_K8S_SERVICE_ACCOUNT_NAME: {{ .Values.serviceAccount.name | default (include "aios.serviceAccountName" .) | quote }}
+  {{- end }}
+  {{- if hasKey .Values.app.config "AIOS_K8S_NAMESPACE_MODE" }}
+  {{- if eq .Values.app.config.AIOS_K8S_NAMESPACE_MODE "CUSTOM" }}
+  {{- if not (hasKey .Values.app.config "AIOS_K8S_NAMESPACE_FOR_SERVICES") }}
+  AIOS_K8S_NAMESPACE_FOR_SERVICES: {{ .Release.Namespace | quote }}
+  {{- end }}
+  {{- end }}
   {{- end }}
   # Dynamic config
   {{- range $key, $val := .Values.app.config }}

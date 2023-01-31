@@ -10,20 +10,17 @@ data:
   aios-realm-redirect-url: {{ printf "%s/*" (include "aios.url" .) | quote }}
   keycloak-url: {{ printf "%s" (include "aios.keycloak.url" .) }}
   keycloak-internal-url: {{ printf "%s" (include "aios.keycloak.url-internal" .) }}
-  {{- $mqttProtocol := "ws" }}
-  {{- if .Values.emqx.ingress.broker.tls }}
-  {{- $mqttProtocol = "wss" }}
+  {{- $amqpProtocol := "ws" }}
+  {{- if .Values.ingress.tls }}
+  {{- $amqpProtocol = "wss" }}
   {{- end }}
-  {{- $mqttHost := "localhost" }}
-  {{- if .Values.emqx.ingress.broker.hosts }}
-  {{- $mqttHost = (first .Values.emqx.ingress.broker.hosts).host }}
+  {{- $amqpHost := "localhost" }}
+  {{- if .Values.ingress.hosts }}
+  {{- $amqpHost = (first .Values.ingress.hosts).host }}
   {{- end }}
-  {{- $mqttPath := "/mqtt" }}
-  {{- if .Values.emqx.ingress.broker.hosts }}
-  {{- $mqttPath = (first (first .Values.emqx.ingress.broker.hosts).paths).path }}
-  {{- end }}
-  {{- $mqttUrl := printf "%s://%s%s" $mqttProtocol $mqttHost $mqttPath }}
-  emqx-url: {{ $mqttUrl }}
+  {{- $amqpPath := "/amqp" }}
+  {{- $amqpUrl := printf "%s://%s%s" $amqpProtocol $amqpHost $amqpPath }}
+  amqp-url: {{ $amqpUrl }}
   grafana-url: {{ include "aios.grafana.url" . }}
   grafana-internal-url: {{ include "aios.grafana.url-internal" . }}
   grafana-realm-redirect-url: {{ printf "%s/*" (include "aios.grafana.url" .) }}

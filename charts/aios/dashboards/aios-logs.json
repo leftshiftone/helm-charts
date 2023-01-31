@@ -1,10 +1,12 @@
 {
+  "__inputs": [],
+  "__elements": {},
   "__requires": [
     {
       "type": "grafana",
       "id": "grafana",
       "name": "Grafana",
-      "version": "8.5.10"
+      "version": "9.3.4"
     },
     {
       "type": "datasource",
@@ -50,62 +52,14 @@
   "gnetId": 10880,
   "graphTooltip": 0,
   "id": null,
-  "iteration": 1661439444081,
   "links": [],
   "liveNow": false,
   "panels": [
     {
-      "datasource": "Prometheus",
-      "fieldConfig": {
-        "defaults": {
-          "decimals": 2,
-          "links": [],
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "blue",
-                "value": null
-              }
-            ]
-          },
-          "unit": "bytes"
-        },
-        "overrides": []
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
       },
-      "id": 10,
-      "interval": "",
-      "options": {
-        "colorMode": "none",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "pluginVersion": "8.5.10",
-      "targets": [
-        {
-          "datasource": "Prometheus",
-          "expr": "sum(loki_ingester_chunk_stored_bytes_total)",
-          "instant": true,
-          "interval": "",
-          "legendFormat": "",
-          "refId": "A"
-        }
-      ],
-      "title": "Logs Usage",
-      "type": "stat"
-    },
-    {
-      "datasource": "Prometheus",
       "fieldConfig": {
         "defaults": {
           "decimals": 2,
@@ -126,8 +80,8 @@
       },
       "gridPos": {
         "h": 3,
-        "w": 6,
-        "x": 6,
+        "w": 12,
+        "x": 0,
         "y": 0
       },
       "id": 12,
@@ -147,11 +101,14 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "8.5.10",
+      "pluginVersion": "9.3.4",
       "targets": [
         {
-          "datasource": "Prometheus",
-          "expr": "sum(log_messages_total)",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(loki_log_messages_total)",
           "instant": false,
           "interval": "",
           "legendFormat": "",
@@ -162,63 +119,10 @@
       "type": "stat"
     },
     {
-      "datasource": "Prometheus",
-      "fieldConfig": {
-        "defaults": {
-          "decimals": 0,
-          "links": [],
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "blue",
-                "value": null
-              }
-            ]
-          },
-          "unit": "short"
-        },
-        "overrides": []
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
       },
-      "gridPos": {
-        "h": 3,
-        "w": 6,
-        "x": 12,
-        "y": 0
-      },
-      "id": 14,
-      "interval": "",
-      "options": {
-        "colorMode": "none",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "pluginVersion": "8.5.10",
-      "targets": [
-        {
-          "datasource": "Prometheus",
-          "expr": "sum(loki_store_series_total)",
-          "instant": false,
-          "interval": "",
-          "legendFormat": "",
-          "refId": "A"
-        }
-      ],
-      "title": "Total Series",
-      "type": "stat"
-    },
-    {
-      "datasource": "Prometheus",
       "description": "",
       "fieldConfig": {
         "defaults": {
@@ -264,8 +168,8 @@
       },
       "gridPos": {
         "h": 3,
-        "w": 6,
-        "x": 18,
+        "w": 12,
+        "x": 12,
         "y": 0
       },
       "id": 20,
@@ -285,10 +189,13 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "8.5.10",
+      "pluginVersion": "9.3.4",
       "targets": [
         {
-          "datasource": "Prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
           "expr": "avg(avg_over_time(up{job=~\"$job\",instance=~\"$instance\"}[$__interval]) * 100)",
           "format": "time_series",
           "intervalFactor": 2,
@@ -301,13 +208,18 @@
       "type": "stat"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "palette-classic"
           },
           "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
@@ -371,18 +283,22 @@
             "last"
           ],
           "displayMode": "list",
-          "placement": "bottom"
+          "placement": "bottom",
+          "showLegend": true
         },
         "tooltip": {
           "mode": "multi",
           "sort": "none"
         }
       },
-      "pluginVersion": "8.5.10",
+      "pluginVersion": "9.2.7",
       "targets": [
         {
-          "datasource": "Prometheus",
-          "expr": "sum(irate(log_messages_total{job=~\"$job\",instance=~\"$instance\"}[1m])) by (level)",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(irate(loki_log_messages_total{job=~\"$job\",instance=~\"$instance\"}[1m])) by (level)",
           "interval": "",
           "legendFormat": "{{ level }}",
           "refId": "A"
@@ -392,13 +308,18 @@
       "type": "timeseries"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "palette-classic"
           },
           "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
@@ -459,17 +380,21 @@
             "sum"
           ],
           "displayMode": "table",
-          "placement": "right"
+          "placement": "right",
+          "showLegend": true
         },
         "tooltip": {
           "mode": "multi",
           "sort": "none"
         }
       },
-      "pluginVersion": "8.5.10",
+      "pluginVersion": "9.2.7",
       "targets": [
         {
-          "datasource": "Prometheus",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
           "editorMode": "code",
           "expr": "sum(promtail_file_bytes_total{pod=~\".*\"}) by (pod)",
           "legendFormat": "{{instance}}",
@@ -482,7 +407,7 @@
     }
   ],
   "refresh": "5m",
-  "schemaVersion": 36,
+  "schemaVersion": 37,
   "style": "dark",
   "tags": [
     "AIOS"
@@ -502,6 +427,7 @@
         "name": "datasource",
         "options": [],
         "query": "prometheus",
+        "queryValue": "",
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
@@ -509,7 +435,10 @@
       },
       {
         "current": {},
-        "datasource": "Prometheus",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
         "definition": "label_values(loki_build_info, instance)",
         "hide": 0,
         "includeAll": true,
@@ -529,6 +458,10 @@
       },
       {
         "current": {},
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
         "definition": "label_values(loki_build_info, job)",
         "hide": 0,
         "includeAll": false,
@@ -569,6 +502,6 @@
   "timezone": "",
   "title": "AIOS Logs",
   "uid": "aios-logs",
-  "version": 2,
+  "version": 1,
   "weekStart": ""
 }
