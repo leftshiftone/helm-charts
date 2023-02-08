@@ -184,6 +184,41 @@ entries:
     version: 1.0.0
   semantic-search:
   - apiVersion: v2
+    appVersion: 1.2.0
+    created: "2023-02-08T13:51:41.549636455Z"
+    dependencies:
+    - condition: semantic-search-indexer.enabled
+      name: semantic-search-indexer
+      repository: https://charts.leftshift.one
+      version: 1.2.0
+    - condition: semantic-search-searcher.enabled
+      name: semantic-search-searcher
+      repository: https://charts.leftshift.one
+      version: 1.2.0
+    - condition: eck-operator.enabled
+      name: eck-operator
+      repository: https://helm.elastic.co
+      version: 2.5.0
+    - condition: prometheus-elasticsearch-exporter.enabled
+      name: prometheus-elasticsearch-exporter
+      repository: https://prometheus-community.github.io/helm-charts
+      version: 5.0.0
+    - condition: minio.enabled
+      name: minio
+      repository: https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami
+      version: 11.10.21
+    description: A Helm chart for Kubernetes
+    digest: ec92209b5e91b8b9d48931f5d991c19ea2d4bd5e0a185807f4f9bef3929dffd1
+    maintainers:
+    - email: contact@leftshift.one
+      name: LEFTSHIFT ONE Software GmbH
+      url: https://www.leftshift.one
+    name: semantic-search
+    type: application
+    urls:
+    - https://github.com/leftshiftone/helm-charts/releases/download/semantic-search-1.2.0/semantic-search-1.2.0.tgz
+    version: 1.2.0
+  - apiVersion: v2
     appVersion: 1.1.9
     created: "2022-12-13T13:46:10.210474173Z"
     dependencies:
@@ -969,4 +1004,4 @@ entries:
     urls:
     - https://github.com/leftshiftone/helm-charts/releases/download/semantic-search-searcher-0.1.0/semantic-search-searcher-0.1.0.tgz
     version: 0.1.0
-generated: "2023-02-08T13:45:57.211553391Z"
+generated: "2023-02-08T13:51:41.549902552Z"
