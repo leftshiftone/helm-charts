@@ -654,6 +654,20 @@ entries:
     version: 0.1.0
   semantic-search-indexer:
   - apiVersion: v2
+    appVersion: 1.3.0
+    created: "2023-02-09T07:06:08.853157561Z"
+    description: A Helm chart for Kubernetes
+    digest: ac1160e9ad04bb303ac1dcbfbc4ff1931cbcea468919be355d5075480cb4a0bc
+    maintainers:
+    - email: contact@leftshift.one
+      name: LEFTSHIFT ONE Software GmbH
+      url: https://www.leftshift.one
+    name: semantic-search-indexer
+    type: application
+    urls:
+    - https://github.com/leftshiftone/helm-charts/releases/download/semantic-search-indexer-1.3.0/semantic-search-indexer-1.3.0.tgz
+    version: 1.3.0
+  - apiVersion: v2
     appVersion: 1.2.0
     created: "2023-02-08T13:45:57.008856273Z"
     description: A Helm chart for Kubernetes
@@ -822,6 +836,20 @@ entries:
     - https://github.com/leftshiftone/helm-charts/releases/download/semantic-search-indexer-1.0.0/semantic-search-indexer-1.0.0.tgz
     version: 1.0.0
   semantic-search-searcher:
+  - apiVersion: v2
+    appVersion: 1.3.0
+    created: "2023-02-09T07:06:09.233150028Z"
+    description: A Helm chart for Kubernetes
+    digest: 8540d43d8379b18ec9eb52e5d22cec95be82d2c9f3f95eb850e117c755f3bd8a
+    maintainers:
+    - email: contact@leftshift.one
+      name: LEFTSHIFT ONE Software GmbH
+      url: https://www.leftshift.one
+    name: semantic-search-searcher
+    type: application
+    urls:
+    - https://github.com/leftshiftone/helm-charts/releases/download/semantic-search-searcher-1.3.0/semantic-search-searcher-1.3.0.tgz
+    version: 1.3.0
   - apiVersion: v2
     appVersion: 1.2.0
     created: "2023-02-08T13:45:57.211348288Z"
@@ -1004,4 +1032,4 @@ entries:
     urls:
     - https://github.com/leftshiftone/helm-charts/releases/download/semantic-search-searcher-0.1.0/semantic-search-searcher-0.1.0.tgz
     version: 0.1.0
-generated: "2023-02-08T13:51:41.549902552Z"
+generated: "2023-02-09T07:06:09.234358736Z"
