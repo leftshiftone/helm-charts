@@ -2,6 +2,48 @@ apiVersion: v1
 entries:
   aios:
   - apiVersion: v2
+    appVersion: 1.2.0
+    created: "2023-03-08T10:11:35.548553822Z"
+    dependencies:
+    - condition: postgresql.enabled
+      name: postgresql
+      repository: https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami
+      version: 12.1.9
+    - condition: rabbitmq.enabled
+      name: rabbitmq
+      repository: https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami
+      version: 11.4.0
+    - condition: keycloak.enabled
+      name: keycloak
+      repository: https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami
+      version: 12.3.0
+    - alias: kubeprometheusstack
+      condition: kubeprometheusstack.enabled
+      name: kube-prometheus-stack
+      repository: https://prometheus-community.github.io/helm-charts
+      version: 44.4.1
+    - alias: lokistack
+      condition: lokistack.enabled
+      name: loki-stack
+      repository: https://grafana.github.io/helm-charts
+      version: 2.9.9
+    - alias: grafanaagentoperator
+      condition: grafanaagentoperator.enabled
+      name: grafana-agent-operator
+      repository: https://grafana.github.io/helm-charts
+      version: 0.2.12
+    description: A Helm chart for deploying AIOS in Kubernetes.
+    digest: dee61b2dd69589aa22a5754f6d9c183466d1d751f190849988b44f60935f724b
+    maintainers:
+    - email: contact@leftshift.one
+      name: LEFTSHIFT ONE Software GmbH
+      url: https://www.leftshift.one
+    name: aios
+    type: application
+    urls:
+    - https://github.com/leftshiftone/helm-charts/releases/download/aios-2.1.0/aios-2.1.0.tgz
+    version: 2.1.0
+  - apiVersion: v2
     appVersion: 1.1.0
     created: "2023-01-31T06:32:24.674400924Z"
     dependencies:
@@ -1067,4 +1109,4 @@ entries:
     urls:
     - https://github.com/leftshiftone/helm-charts/releases/download/semantic-search-searcher-0.1.0/semantic-search-searcher-0.1.0.tgz
     version: 0.1.0
-generated: "2023-02-09T07:11:42.297470026Z"
+generated: "2023-03-08T10:11:35.548856025Z"
