@@ -5,10 +5,9 @@ metadata:
   name: {{ .Values.keycloak.themeConfigmapName }}
   labels:
   {{- include "aios.labels" . | nindent 4 }}
-data:
+binaryData:
   {{- $files := .Files }}
   {{- range $path, $_ := .Files.Glob "themes/keycloak-aios/**" }}
-  {{ $path | replace "/" "." }}: |
-{{ $files.Get $path | indent 4 }}
+  {{ $path | replace "/" "." }}: {{ $files.Get $path | b64enc }}
   {{- end }}
 {{- end }}

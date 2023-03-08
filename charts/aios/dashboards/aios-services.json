@@ -6,7 +6,7 @@
       "type": "grafana",
       "id": "grafana",
       "name": "Grafana",
-      "version": "9.3.4"
+      "version": "9.3.6"
     },
     {
       "type": "datasource",
@@ -53,7 +53,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "prometheus-aios"
       },
       "description": "",
       "fieldConfig": {
@@ -132,7 +132,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "prometheus-aios"
           },
           "editorMode": "code",
           "expr": "rate(envoy_cluster_upstream_rq_total{namespace=\"$namespace\", app_kubernetes_io_name=\"$service\", envoy_cluster_name!=\"aios\"}[$__rate_interval])",
@@ -147,7 +147,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "prometheus-aios"
       },
       "fieldConfig": {
         "defaults": {
@@ -224,7 +224,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "prometheus-aios"
           },
           "editorMode": "code",
           "expr": "histogram_quantile(1, sum(rate(envoy_cluster_upstream_rq_time_bucket{namespace=\"$namespace\", app_kubernetes_io_name=\"$service\"}[$__rate_interval])) by (le))",
@@ -239,7 +239,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "prometheus-aios"
       },
       "fieldConfig": {
         "defaults": {
@@ -314,7 +314,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "prometheus-aios"
           },
           "editorMode": "code",
           "expr": "rate(envoy_cluster_upstream_rq_xx{namespace=\"$namespace\", app_kubernetes_io_name=\"$service\", envoy_response_code_class=\"2\", envoy_cluster_name!=\"aios\"}[$__rate_interval])",
@@ -329,7 +329,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "prometheus-aios"
       },
       "fieldConfig": {
         "defaults": {
@@ -469,7 +469,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "prometheus-aios"
           },
           "editorMode": "code",
           "expr": "sum(irate(container_cpu_usage_seconds_total{namespace=\"$namespace\", pod=\"$pod\"}[5m]))",
@@ -480,7 +480,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "prometheus-aios"
           },
           "editorMode": "code",
           "expr": "sum(kube_pod_container_resource_requests{namespace=\"$namespace\", pod=\"$pod\", resource=\"cpu\"})",
@@ -492,7 +492,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "prometheus-aios"
           },
           "editorMode": "code",
           "expr": "sum(kube_pod_container_resource_limits{namespace=\"$namespace\", pod=\"$pod\", resource=\"cpu\"})",
@@ -508,7 +508,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "prometheus-aios"
       },
       "fieldConfig": {
         "defaults": {
@@ -583,7 +583,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "prometheus-aios"
           },
           "editorMode": "code",
           "expr": "rate(envoy_cluster_upstream_rq_xx{namespace=\"$namespace\", app_kubernetes_io_name=\"$service\", envoy_response_code_class=\"5\", envoy_cluster_name!=\"aios\"}[$__rate_interval])",
@@ -598,7 +598,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "prometheus-aios"
       },
       "fieldConfig": {
         "defaults": {
@@ -673,7 +673,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "prometheus-aios"
           },
           "editorMode": "code",
           "expr": "rate(envoy_cluster_upstream_rq_xx{namespace=\"$namespace\", app_kubernetes_io_name=\"$service\", envoy_response_code_class=\"4\", envoy_cluster_name!=\"aios\"}[$__rate_interval])",
@@ -688,7 +688,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "prometheus-aios"
       },
       "fieldConfig": {
         "defaults": {
@@ -830,7 +830,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "prometheus-aios"
           },
           "editorMode": "code",
           "expr": "sum(container_memory_working_set_bytes{namespace=\"$namespace\", pod=\"$pod\"})",
@@ -841,7 +841,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "prometheus-aios"
           },
           "editorMode": "code",
           "expr": "sum(kube_pod_container_resource_requests{namespace=\"$namespace\", pod=\"$pod\", resource=\"memory\"})",
@@ -853,7 +853,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "prometheus-aios"
           },
           "editorMode": "code",
           "expr": "sum(kube_pod_container_resource_limits{namespace=\"$namespace\", pod=\"$pod\", resource=\"memory\"})",
@@ -869,7 +869,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "prometheus-aios"
       },
       "fieldConfig": {
         "defaults": {
@@ -944,7 +944,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "prometheus-aios"
           },
           "editorMode": "code",
           "expr": "rate(envoy_cluster_upstream_rq_xx{namespace=\"$namespace\", app_kubernetes_io_name=\"$service\", envoy_response_code_class=\"3\", envoy_cluster_name!=\"aios\"}[$__rate_interval])",
@@ -969,7 +969,7 @@
         "current": {},
         "datasource": {
           "type": "prometheus",
-          "uid": "prometheus"
+          "uid": "prometheus-aios"
         },
         "definition": "label_values(up{aios_dev_service_id!=\"\"}, namespace)",
         "hide": 0,
@@ -992,7 +992,7 @@
         "current": {},
         "datasource": {
           "type": "prometheus",
-          "uid": "prometheus"
+          "uid": "prometheus-aios"
         },
         "definition": "label_values(app_kubernetes_io_name)",
         "hide": 0,
@@ -1015,7 +1015,7 @@
         "current": {},
         "datasource": {
           "type": "prometheus",
-          "uid": "prometheus"
+          "uid": "prometheus-aios"
         },
         "definition": "label_values(up{app_kubernetes_io_name=\"$service\"}, pod)",
         "hide": 2,

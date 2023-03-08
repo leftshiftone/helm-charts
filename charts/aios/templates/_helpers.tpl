@@ -124,14 +124,13 @@ AIOS Keycloak internal URL
 AIOS Grafana URL
 */}}
 {{- define "aios.grafana.url" }}
-{{- $kubePrometheusStack := get .Values "kube-prometheus-stack" }}
 {{- $urlProtocol := "http" }}
-{{- if $kubePrometheusStack.grafana.ingress.tls }}
+{{- if .Values.kubeprometheusstack.grafana.ingress.tls }}
 {{- $urlProtocol = "https" }}
 {{- end }}
 {{- $urlHost := "localhost" }}
-{{- if $kubePrometheusStack.grafana.ingress.hosts }}
-{{- $urlHost = first $kubePrometheusStack.grafana.ingress.hosts }}
+{{- if .Values.kubeprometheusstack.grafana.ingress.hosts }}
+{{- $urlHost = first .Values.kubeprometheusstack.grafana.ingress.hosts }}
 {{- end }}
 {{- printf "%s://%s" $urlProtocol $urlHost }}
 {{- end }}
@@ -140,22 +139,19 @@ AIOS Grafana URL
 AIOS Grafana internal URL
 */}}
 {{- define "aios.grafana.url-internal" }}
-{{- $kubePrometheusStack := get .Values "kube-prometheus-stack" }}
-{{- printf "http://%s:%s" (printf "%s-grafana" .Release.Name) ((int $kubePrometheusStack.grafana.service.port | toString)) }}
+{{- printf "http://%s:%s" (printf "%s-grafana" .Release.Name) ((int .Values.kubeprometheusstack.grafana.service.port | toString)) }}
 {{- end }}
 
 {{/*
 AIOS Grafana Loki internal URL
 */}}
 {{- define "aios.grafana.loki.url" }}
-{{- $lokiStack := get .Values "loki-stack" }}
-{{- printf "http://%s:%s" (printf "%s-loki" .Release.Name) ($lokiStack.loki.service.port | toString) }}
+{{- printf "http://%s:%s" (printf "%s-loki" .Release.Name) (.Values.lokistack.loki.service.port | toString) }}
 {{- end }}
 
 {{/*
 AIOS Prometheus URL
 */}}
 {{- define "aios.prometheus.url" }}
-{{- $kubePrometheusStack := get .Values "kube-prometheus-stack" }}
-{{- printf "http://%s:%s" (printf "%s-%s-prometheus" .Release.Name $kubePrometheusStack.nameOverride) ((int $kubePrometheusStack.prometheus.service.port | toString)) }}
+{{- printf "http://%s:%s" (printf "%s-%s-prometheus" .Release.Name .Values.kubeprometheusstack.nameOverride) ((int .Values.kubeprometheusstack.prometheus.service.port | toString)) }}
 {{- end }}

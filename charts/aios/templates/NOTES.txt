@@ -1,5 +1,6 @@
-Chart:   {{ .Chart.Name }}-{{ .Chart.Version }}
-Version: {{ .Chart.AppVersion }} (image tag {{ default .Chart.AppVersion .Values.image.tag }})
+Repository: https://charts.leftshift.one
+Chart:      {{ .Chart.Name }}-{{ .Chart.Version }}
+Version:    {{ .Chart.AppVersion }} (image tag {{ default .Chart.AppVersion .Values.image.tag }})
 
 LEFTSHIFT ONE Software GmbH
 support@leftshift.one
@@ -32,11 +33,10 @@ Get the application URL:
 Get the admin password for the application for user admin@local:
   export AIOS_ADMIN_PASSWORD=$(kubectl get secret --namespace {{ .Release.Namespace }} {{ .Values.app.admin.existingSecret }} -o jsonpath="{.data.password}" | base64 --decode)
 {{- end }}
-{{- $kubePrometheusStack := get .Values "kube-prometheus-stack" }}
-{{- if and $kubePrometheusStack.enabled (and $kubePrometheusStack.grafana.enabled $kubePrometheusStack.grafana.admin.existingSecret) }}
+{{- if and .Values.kubeprometheusstack.enabled (and .Values.kubeprometheusstack.grafana.enabled .Values.kubeprometheusstack.grafana.admin.existingSecret) }}
 
 Get the Grafana password with:
-  export GRAFANA_ADMIN_PASSWORD=$(kubectl get secret --namespace {{ .Release.Namespace }} {{ $kubePrometheusStack.grafana.admin.existingSecret }} -o jsonpath="{.data.admin-password}" | base64 --decode)
+  export GRAFANA_ADMIN_PASSWORD=$(kubectl get secret --namespace {{ .Release.Namespace }} {{ .Values.kubeprometheusstack.grafana.admin.existingSecret }} -o jsonpath="{.data.admin-password}" | base64 --decode)
 {{- end }}
 
 

@@ -1,0 +1,26 @@
+{{- if and .Values.grafanaagentoperator.enabled .Values.grafanaagentoperator.metricsInstance.enabled }}
+apiVersion: monitoring.grafana.com/v1alpha1
+kind: MetricsInstance
+metadata:
+  name: {{ include "aios.fullname" . }}-metrics
+  labels:
+    {{- include "aios.labels" . | nindent 4 }}
+    {{- toYaml .Values.grafanaagentoperator.metricsInstance.additionalLabels | nindent 4 }}
+spec:
+  {{- with .Values.grafanaagentoperator.metricsInstance.remoteWrite }}
+  remoteWrite:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  serviceMonitorNamespaceSelector:
+    {{- toYaml .Values.grafanaagentoperator.metricsInstance.serviceMonitorNamespaceSelector | nindent 4 }}
+  serviceMonitorSelector:
+    {{- toYaml .Values.grafanaagentoperator.metricsInstance.serviceMonitorSelector | nindent 4 }}
+  podMonitorNamespaceSelector:
+    {{- toYaml .Values.grafanaagentoperator.metricsInstance.podMonitorNamespaceSelector | nindent 4 }}
+  podMonitorSelector:
+    {{- toYaml .Values.grafanaagentoperator.metricsInstance.podMonitorSelector | nindent 4 }}
+  probeNamespaceSelector:
+    {{- toYaml .Values.grafanaagentoperator.metricsInstance.probeNamespaceSelector | nindent 4 }}
+  probeSelector:
+    {{- toYaml .Values.grafanaagentoperator.metricsInstance.probeSelector | nindent 4 }}
+{{- end}}

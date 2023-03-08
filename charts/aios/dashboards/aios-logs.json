@@ -6,7 +6,7 @@
       "type": "grafana",
       "id": "grafana",
       "name": "Grafana",
-      "version": "9.3.4"
+      "version": "9.3.6"
     },
     {
       "type": "datasource",
@@ -58,7 +58,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "prometheus-aios"
       },
       "fieldConfig": {
         "defaults": {
@@ -101,12 +101,12 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "9.3.4",
+      "pluginVersion": "9.3.6",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "prometheus-aios"
           },
           "expr": "sum(loki_log_messages_total)",
           "instant": false,
@@ -121,7 +121,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "prometheus-aios"
       },
       "description": "",
       "fieldConfig": {
@@ -189,12 +189,12 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "9.3.4",
+      "pluginVersion": "9.3.6",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "prometheus-aios"
           },
           "expr": "avg(avg_over_time(up{job=~\"$job\",instance=~\"$instance\"}[$__interval]) * 100)",
           "format": "time_series",
@@ -210,7 +210,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "prometheus-aios"
       },
       "fieldConfig": {
         "defaults": {
@@ -296,7 +296,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "prometheus-aios"
           },
           "expr": "sum(irate(loki_log_messages_total{job=~\"$job\",instance=~\"$instance\"}[1m])) by (level)",
           "interval": "",
@@ -310,7 +310,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "prometheus-aios"
       },
       "fieldConfig": {
         "defaults": {
@@ -393,7 +393,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "prometheus-aios"
           },
           "editorMode": "code",
           "expr": "sum(promtail_file_bytes_total{pod=~\".*\"}) by (pod)",
@@ -437,7 +437,7 @@
         "current": {},
         "datasource": {
           "type": "prometheus",
-          "uid": "prometheus"
+          "uid": "prometheus-aios"
         },
         "definition": "label_values(loki_build_info, instance)",
         "hide": 0,
@@ -460,7 +460,7 @@
         "current": {},
         "datasource": {
           "type": "prometheus",
-          "uid": "prometheus"
+          "uid": "prometheus-aios"
         },
         "definition": "label_values(loki_build_info, job)",
         "hide": 0,

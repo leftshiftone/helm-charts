@@ -43,23 +43,40 @@ data:
     {{- end }}
   {{- end }}
   # Grafana config
-  {{- $kubePrometheusStack := get .Values "kube-prometheus-stack" }}
-  {{- if and $kubePrometheusStack.enabled $kubePrometheusStack.grafana.enabled }}
+  {{- if and .Values.kubeprometheusstack.enabled .Values.kubeprometheusstack.grafana.enabled }}
     {{- if not (hasKey .Values.app.config "AIOS_GRAFANA_ENABLED") }}
-  AIOS_GRAFANA_ENABLED: {{ $kubePrometheusStack.grafana.enabled | quote }}
+  AIOS_GRAFANA_ENABLED: {{ .Values.kubeprometheusstack.grafana.enabled | quote }}
     {{- end }}
     {{- if not (hasKey .Values.app.config "AIOS_UI_GRAFANA_ENABLED") }}
-  AIOS_UI_GRAFANA_ENABLED: {{ $kubePrometheusStack.grafana.enabled | quote }}
+  AIOS_UI_GRAFANA_ENABLED: {{ .Values.kubeprometheusstack.grafana.enabled | quote }}
+    {{- end }}
+  {{- end }}
+  # Grafana agent config
+  {{- if and .Values.grafanaagentoperator.enabled .Values.grafanaagentoperator.grafanaAgent.enabled }}
+    {{- if not (hasKey .Values.app.config "AIOS_GRAFANA_AGENT_VERSION") }}
+  AIOS_GRAFANA_AGENT_VERSION: {{ .Values.grafanaagentoperator.grafanaAgent.image.tag | quote }}
+    {{- end }}
+    {{- if not (hasKey .Values.app.config "AIOS_GRAFANA_AGENT_SERVICE_ACCOUNT_NAME") }}
+  AIOS_GRAFANA_AGENT_SERVICE_ACCOUNT_NAME: {{ .Values.grafanaagentoperator.serviceAccount.name | quote }}
+    {{- end }}
+    {{- if not (hasKey .Values.app.config "AIOS_GRAFANA_AGENT_CREATE_PER_TENANT") }}
+  AIOS_GRAFANA_AGENT_CREATE_PER_TENANT: {{ .Values.grafanaagentoperator.grafanaAgent.enabled | quote }}
     {{- end }}
   {{- end }}
   # Prometheus config
-  {{- if and $kubePrometheusStack.enabled $kubePrometheusStack.prometheus.enabled }}
+  {{- if and .Values.kubeprometheusstack.enabled .Values.kubeprometheusstack.prometheus.enabled }}
     {{- if not (hasKey .Values.app.config "AIOS_PROMETHEUS_ENABLED") }}
-  AIOS_PROMETHEUS_ENABLED: {{ $kubePrometheusStack.prometheus.enabled | quote }}
+  AIOS_PROMETHEUS_ENABLED: {{ .Values.kubeprometheusstack.prometheus.enabled | quote }}
     {{- end }}
   {{- end }}
   {{- if not (hasKey .Values.app.config "AIOS_PROMETHEUS_RELEASE_NAMESPACE") }}
   AIOS_PROMETHEUS_RELEASE_NAMESPACE: {{ .Release.Namespace | quote }}
+  {{- end }}
+  # Loki config
+  {{- if and .Values.lokistack.enabled .Values.lokistack.loki.enabled }}
+    {{- if not (hasKey .Values.app.config "AIOS_LOKI_ENABLED") }}
+  AIOS_LOKI_ENABLED: {{ .Values.lokistack.loki.enabled | quote }}
+    {{- end }}
   {{- end }}
   # Kubernetes config
   {{- if not (hasKey .Values.app.config "AIOS_K8S_ENABLED") }}

@@ -241,32 +241,39 @@ spec:
                 configMapKeyRef:
                   name: {{ printf "%s-urls" (include "aios.fullname" .) }}
                   key: amqp-url
-              {{- if .Values.keycloak.enabled }}
+            {{- end }}
+            - name: AIOS_K8S_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: "metadata.namespace"
+            {{- if .Values.keycloak.enabled }}
             - name: AIOS_ROUTES_UI_URL
               valueFrom:
                 configMapKeyRef:
                   name: {{ .Values.app.urlsConfigMapName }}
                   key: aios-url
-              {{- end }}
-              {{- $kubePrometheusStack := get .Values "kube-prometheus-stack" }}
-              {{- if and $kubePrometheusStack.enabled $kubePrometheusStack.grafana.enabled }}
-                {{- if $kubePrometheusStack.grafana.admin.existingSecret }}
+            {{- end }}
+            {{- if and .Values.kubeprometheusstack.enabled .Values.kubeprometheusstack.grafana.enabled }}
+              {{- if .Values.kubeprometheusstack.grafana.admin.existingSecret }}
             - name: AIOS_GRAFANA_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: {{ $kubePrometheusStack.grafana.admin.existingSecret }}
+                  name: {{ .Values.kubeprometheusstack.grafana.admin.existingSecret }}
                   key: admin-user
             - name: AIOS_GRAFANA_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ $kubePrometheusStack.grafana.admin.existingSecret }}
+                  name: {{ .Values.kubeprometheusstack.grafana.admin.existingSecret }}
                   key: admin-password
-                {{- end }}
+              {{- end }}
+              {{- if not (hasKey .Values.app.config "AIOS_GRAFANA_EXTERNAL_URL") }}
             - name: AIOS_GRAFANA_EXTERNAL_URL
               valueFrom:
                 configMapKeyRef:
                   name: {{ include "aios.fullname" . }}-urls
                   key: grafana-url
+              {{- end }}
             - name: AIOS_GRAFANA_URL
               valueFrom:
                 configMapKeyRef:
@@ -277,21 +284,32 @@ spec:
                 configMapKeyRef:
                   name: {{ include "aios.fullname" . }}-urls
                   key: grafana-url
-              {{- end }}
             {{- end }}
-              {{- $lokiStack := get .Values "loki-stack" }}
-              {{- if and $lokiStack.enabled $lokiStack.loki.enabled }}
+            {{- if and .Values.lokistack.enabled .Values.lokistack.loki.enabled }}
+              {{- if not (hasKey .Values.app.config "AIOS_GRAFANA_LOKI_URL") }}
             - name: AIOS_GRAFANA_LOKI_URL
               valueFrom:
                 configMapKeyRef:
                   name: {{ include "aios.fullname" . }}-urls
-                  key: loki-url
+                  key: loki-internal-url
+              {{- end }}
+              {{- if not (hasKey .Values.app.config "AIOS_LOKI_URL") }}
+            - name: AIOS_LOKI_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "aios.fullname" . }}-urls
+                  key: loki-internal-url
+              {{- end }}
+            {{- end }}
+            {{- if and .Values.kubeprometheusstack.enabled .Values.kubeprometheusstack.prometheus.enabled }}
+              {{- if not (hasKey .Values.app.config "AIOS_PROMETHEUS_URL") }}
             - name: AIOS_PROMETHEUS_URL
               valueFrom:
                 configMapKeyRef:
                   name: {{ include "aios.fullname" . }}-urls
-                  key: prometheus-url
+                  key: prometheus-internal-url
               {{- end }}
+            {{- end }}
           {{- if .Values.extraVolumeMounts }}
           volumeMounts:
             {{- toYaml .Values.extraVolumeMounts | nindent 12 }}

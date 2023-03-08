@@ -1,0 +1,24 @@
+{{- if and .Values.grafanaagentoperator.enabled .Values.grafanaagentoperator.grafanaAgent.enabled }}
+apiVersion: monitoring.grafana.com/v1alpha1
+kind: GrafanaAgent
+metadata:
+  name: {{ include "aios.fullname" . }}-grafana-agent
+  labels:
+    {{- include "aios.labels" . | nindent 4 }}
+spec:
+  image: {{ .Values.grafanaagentoperator.grafanaAgent.image.repository }}:{{ .Values.grafanaagentoperator.grafanaAgent.image.tag }}
+  logLevel: {{ .Values.grafanaagentoperator.grafanaAgent.logLevel }}
+  serviceAccountName: {{ .Values.grafanaagentoperator.serviceAccount.name }}
+  resources:
+    {{- toYaml .Values.grafanaagentoperator.grafanaAgent.resources | nindent 4 }}
+  nodeSelector:
+    {{- toYaml .Values.grafanaagentoperator.grafanaAgent.nodeSelector | nindent 4 }}
+  {{- with .Values.grafanaagentoperator.grafanaAgent.tolerations }}
+  tolerations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  metrics:
+    {{- toYaml .Values.grafanaagentoperator.grafanaAgent.metrics | nindent 4 }}
+  logs:
+    {{- toYaml .Values.grafanaagentoperator.grafanaAgent.logs | nindent 4 }}
+{{- end}}

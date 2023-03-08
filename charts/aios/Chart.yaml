@@ -1,6 +1,6 @@
 apiVersion: v2
 name: aios
-description: A Helm chart for Kubernetes
+description: A Helm chart for deploying AIOS in Kubernetes.
 maintainers:
   - name: LEFTSHIFT ONE Software GmbH
     url: https://www.leftshift.one
@@ -19,13 +19,13 @@ type: application
 # This is the chart version. This version number should be incremented each time you make changes
 # to the chart and its templates, including the app version.
 # Versions are expected to follow Semantic Versioning (https://semver.org/)
-version: 2.0.0
+version: 2.1.0
 
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application. Versions are not expected to
 # follow Semantic Versioning. They should reflect the version the application is using.
 # It is recommended to use it with quotes.
-appVersion: "1.1.0"
+appVersion: "1.2.0"
 
 dependencies:
   - name: postgresql
@@ -41,10 +41,17 @@ dependencies:
     repository: https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami
     condition: keycloak.enabled
   - name: kube-prometheus-stack
-    version: 44.1.0
+    alias: kubeprometheusstack
+    version: 44.4.1
     repository: https://prometheus-community.github.io/helm-charts
-    condition: kube-prometheus-stack.enabled
+    condition: kubeprometheusstack.enabled
   - name: loki-stack
-    version: 2.8.9
+    alias: lokistack
+    version: 2.9.9
     repository: https://grafana.github.io/helm-charts
-    condition: loki-stack.enabled
+    condition: lokistack.enabled
+  - name: grafana-agent-operator
+    alias: grafanaagentoperator
+    version: 0.2.12
+    repository: https://grafana.github.io/helm-charts
+    condition: grafanaagentoperator.enabled

@@ -105,7 +105,7 @@ podMonitor:
   interval: 10s
   additionalLabels: {}
   additionalPodTargetLabels:
-    - aios_tenant
+    - aios_dev_tenant_id
     - application
     - app_kubernetes_io_instance
     - app_kubernetes_io_name
@@ -118,10 +118,10 @@ resources: {}
   # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
   # limits:
   #   cpu: 1000m
-  #   memory: 1024Mi
+  #   memory: 1G
   # requests:
-  #   cpu: 500m
-  #   memory: 512Mi
+  #   cpu: 100m
+  #   memory: 1G
 
 autoscaling:
   enabled: false
@@ -196,10 +196,10 @@ postgresql:
     # resources:
     #   limits:
     #     cpu: 1000m
-    #     memory: 1024Mi
+    #     memory: 1G
     #   requests:
-    #     cpu: 250m
-    #     memory: 256Mi
+    #     cpu: 100m
+    #     memory: 1G
   # volumePermissions:
   #   enabled: true
   #   securityContext:
@@ -216,11 +216,11 @@ postgresql:
         # release: aios
     # resources:
     #   limits:
-    #     cpu: 500m
-    #     memory: 512Mi
+    #     cpu: 200m
+    #     memory: 250M
     #   requests:
-    #     cpu: 250m
-    #     memory: 256Mi
+    #     cpu: 10m
+    #     memory: 250M
 
 
 # Deploy postgres with the included helm chart from https://artifacthub.io/packages/helm/bitnami/rabbitmq
@@ -279,10 +279,10 @@ rabbitmq:
   # resources:
   #   limits:
   #     cpu: 1000m
-  #     memory: 1000M
+  #     memory: 1G
   #   requests:
-  #     cpu: 250m
-  #     memory: 250M
+  #     cpu: 100m
+  #     memory: 1G
   livenessProbe:
     enabled: true
     initialDelaySeconds: 120
@@ -324,10 +324,10 @@ rabbitmq:
           port: 15670
       resources:
         limits:
-          cpu: 500m
+          cpu: 200m
           memory: 250M
         requests:
-          cpu: 250m
+          cpu: 10m
           memory: 250M
   persistence:
     enabled: false
@@ -382,7 +382,7 @@ keycloak:
   image:
     registry: quay.io
     repository: keycloak/keycloak
-    tag: 20.0.3
+    tag: 20.0.5
   themeConfigmapName: aios-keycloak-theme
   realmConfigmapName: aios-keycloak-realm
   configConfigmapName: aios-keycloak-config
@@ -430,10 +430,10 @@ keycloak:
   # resources:
   #   limits:
   #     cpu: 1000m
-  #     memory: 1024Mi
+  #     memory: 1G
   #   requests:
-  #     cpu: 500m
-  #     memory: 512Mi
+  #     cpu: 100m
+  #     memory: 1G
   metrics:
     enabled: false
     service:
@@ -594,16 +594,22 @@ keycloak:
         items:
           - key: themes.keycloak-aios.account.resources.css.style.css
             path: account/resources/css/style.css
+          - key: themes.keycloak-aios.account.resources.img.favicon.ico
+            path: account/resources/img/favicon.ico
           - key: themes.keycloak-aios.account.theme.properties
             path: account/theme.properties
           - key: themes.keycloak-aios.common.resources.css.global.css
             path: common/resources/css/global.css
           - key: themes.keycloak-aios.common.resources.img.illustration.svg
             path: common/resources/img/illustration.svg
+          - key: themes.keycloak-aios.common.resources.img.favicon.ico
+            path: common/resources/img/favicon.ico
           - key: themes.keycloak-aios.common.resources.img.logo.svg
             path: common/resources/img/logo.svg
           - key: themes.keycloak-aios.login.resources.css.style.css
             path: login/resources/css/style.css
+          - key: themes.keycloak-aios.login.resources.img.favicon.ico
+            path: login/resources/img/favicon.ico
           - key: themes.keycloak-aios.login.theme.properties
             path: login/theme.properties
   cache:
@@ -611,15 +617,15 @@ keycloak:
 
 
 # Deploy prometheus for kubernetes with the included helm chart from https://artifacthub.io/packages/helm/prometheus-community/kube-prometheus-stack
-kube-prometheus-stack:
+kubeprometheusstack:
   enabled: true
   nameOverride: "prometheus"
   grafana:
     enabled: true
     image:
       repository: grafana/grafana
-      tag: 9.3.4
-    # Dashboards to be deployed when kube-prometheus-stack.grafana.extraConfigmapMounts is configured.
+      tag: 9.3.6
+    # Dashboards to be deployed when kubeprometheusstack.grafana.extraConfigmapMounts is configured.
     aiosDashboards:
       - aios-app.json
       - aios-database.json
@@ -628,6 +634,7 @@ kube-prometheus-stack:
       - aios-logs.json
       - aios-metrics.json
       - aios-services.json
+      - aios-storage.json
     aiosConfig: aios-grafana-config
     # If left empty a random password will be created in a secret with the name specified below. If a specific password
     # should be used, the existingSecret needs to be set to an empty string or needs to be commented out.
@@ -641,6 +648,7 @@ kube-prometheus-stack:
       size: 5Gi
       inMemory:
         enabled: false
+    useStatefulSet: true
     useInternalUrlForOauth: false
     env:
       GF_LOG_MODE: "console"
@@ -711,6 +719,9 @@ kube-prometheus-stack:
     ## ref: http://docs.grafana.org/administration/provisioning/#datasources
     ##
     datasources:
+      defaultDatasourceEnabled: true
+      isDefaultDatasource: true
+      uid: prometheus-aios
       datasources.yaml:
         apiVersion: 1
         datasources:
@@ -736,37 +747,37 @@ kube-prometheus-stack:
     # resources:
     #   limits:
     #     cpu: 1000m
-    #     memory: 1024Mi
+    #     memory: 1G
     #   requests:
-    #     cpu: 200m
-    #     memory: 512Mi
+    #     cpu: 100m
+    #     memory: 1G
   kubeStateMetrics:
     enabled: true
     # resources:
     #   limits:
-    #     cpu: 20m
-    #     memory: 64Mi
+    #     cpu: 100m
+    #     memory: 100M
     #   requests:
     #     cpu: 10m
-    #     memory: 32Mi
+    #     memory: 100M
   nodeExporter:
     enabled: true
     # resources:
     #   limits:
-    #     cpu: 25m
-    #     memory: 64Mi
+    #     cpu: 100m
+    #     memory: 100M
     #   requests:
     #     cpu: 10m
-    #     memory: 32Mi
+    #     memory: 100M
   prometheusOperator:
     enabled: true
     # resources:
     #   limits:
-    #     cpu: 200m
-    #     memory: 256Mi
-    #   requests:
     #     cpu: 100m
-    #     memory: 128Mi
+    #     memory: 100M
+    #   requests:
+    #     cpu: 10m
+    #     memory: 100M
   prometheus:
     enabled: true
     service:
@@ -777,11 +788,11 @@ kube-prometheus-stack:
       podMonitorSelectorNilUsesHelmValues: true
       # resources:
       #   limits:
-      #     cpu: 2000m
-      #     memory: 4Gi
+      #     cpu: 1000m
+      #     memory: 2G
       #   requests:
       #     cpu: 100m
-      #     memory: 256Mi
+      #     memory: 2G
   alertmanager:
     enabled: false
   kubeApiServer:
@@ -801,13 +812,13 @@ kube-prometheus-stack:
 
 
 # Deploy loki with the included helm chart from https://artifacthub.io/packages/helm/grafana/loki-stack
-loki-stack:
+lokistack:
   enabled: true
   loki:
     enabled: true
     image:
       repository: grafana/loki
-      tag: 2.7.1
+      tag: 2.7.4
     config:
       auth_enabled: true # Enables multi tenancy
     service:
@@ -822,15 +833,26 @@ loki-stack:
     # resources:
     #   limits:
     #     cpu: 1000m
-    #     memory: 1024Gi
+    #     memory: 1G
     #   requests:
     #     cpu: 100m
-    #     memory: 128Mi
+    #     memory: 1G
   promtail:
     enabled: true
     image:
       repository: grafana/promtail
-      tag: 2.7.1
+      tag: 2.7.4
+    config:
+      logLevel: info
+      clients:
+        - url: http://{{ .Release.Name }}-loki:3100/loki/api/v1/push
+      snippets:
+        pipelineStages:
+          - tenant:
+              label: aios_dev_tenant_id # Feed logs depending on the tenant (uses label aios.dev/tenant-id to determine the tenant id)
+        extraRelabelConfigs:
+          - action: labelmap
+            regex: __meta_kubernetes_pod_label_(aios.+)
     serviceAccount:
       create: true
     serviceMonitor:
@@ -838,16 +860,13 @@ loki-stack:
       interval: 20s
       labels: {}
         # release: aios
-    pipelineStages:
-      - tenant:
-          source: aios_dev_tenant_id # Feed logs depending on the tenant (uses label aios.dev/tenant-id to determine the tenant id)
     # resources:
     #   limits:
-    #     cpu: 250m
-    #     memory: 512Mi
-    #   requests:
     #     cpu: 200m
-    #     memory: 128Mi
+    #     memory: 500M
+    #   requests:
+    #     cpu: 100m
+    #     memory: 500M
   grafana:
     enabled: false
     persistence:
@@ -858,3 +877,86 @@ loki-stack:
         enabled: false
   prometheus:
     enabled: false
+
+# Deploy loki with the included helm chart from https://artifacthub.io/packages/helm/grafana/grafana-agent-operator
+grafanaagentoperator:
+  enabled: false
+  image:
+    tag: v0.31.3
+  nameOverride: grafana-agent-operator
+  extraArgs:
+    - "--log.level"
+    - "info"
+  podLabels:
+    aios.dev/tenant-id: "AIOS"
+  serviceAccount:
+    create: true
+    name: aios-grafana-agent
+  # resources:
+  #   limits:
+  #     cpu: 200m
+  #     memory: 500M
+  #   requests:
+  #     cpu: 100m
+  #     memory: 500M
+  grafanaAgent:
+    enabled: true
+    image:
+      repository: grafana/agent
+      tag: v0.31.3
+    logLevel: info
+    metrics:
+      instanceSelector:
+        matchLabels:
+          agent: grafana-agent-metrics
+      externalLabels:
+        cluster: aios.local
+    logs:
+      instanceSelector:
+        matchLabels:
+          agent: grafana-agent-logs
+    resources: {}
+    #   limits:
+    #     cpu: 500m
+    #     memory: 500M
+    #   requests:
+    #     cpu: 100m
+    #     memory: 500M
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+  metricsInstance:
+    enabled: true
+    additionalLabels:
+      agent: grafana-agent-metrics
+    remoteWrite:
+      - url: http://localhost:9090/api/v1/push
+        headers:
+          "X-Scope-OrgID": "AIOS"
+    # Supply an empty namespace selector to look in all namespaces. Remove
+    # this to only look in the same namespace as the MetricsInstance CR
+    serviceMonitorNamespaceSelector:
+      matchLabels:
+        aios.dev/tenant-id: AIOS
+        app.kubernetes.io/name: aios
+    serviceMonitorSelector:
+      matchLabels:
+        app.kubernetes.io/instance: aios
+    # Supply an empty namespace selector to look in all namespaces. Remove
+    # this to only look in the same namespace as the MetricsInstance CR.
+    podMonitorNamespaceSelector:
+      matchLabels:
+        aios.dev/tenant-id: AIOS
+        app.kubernetes.io/name: aios
+    podMonitorSelector:
+      matchLabels:
+        app.kubernetes.io/instance: aios
+    # Supply an empty namespace selector to look in all namespaces. Remove
+    # this to only look in the same namespace as the MetricsInstance CR.
+    probeNamespaceSelector:
+      matchLabels:
+        aios.dev/tenant-id: AIOS
+        app.kubernetes.io/name: aios
+    probeSelector:
+      matchLabels:
+        app.kubernetes.io/instance: aios

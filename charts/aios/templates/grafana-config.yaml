@@ -1,16 +1,15 @@
-{{- $kubePrometheusStack := get .Values "kube-prometheus-stack" }}
-{{- if and $kubePrometheusStack.enabled $kubePrometheusStack.grafana.enabled }}
+{{- if and .Values.kubeprometheusstack.enabled .Values.kubeprometheusstack.grafana.enabled }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ $kubePrometheusStack.grafana.aiosConfig }}
+  name: {{ .Values.kubeprometheusstack.grafana.aiosConfig }}
   labels:
   {{- include "aios.labels" . | nindent 4 }}
 data:
   {{- $realmName := "AIOS" }}
   {{- $keycloakUrl := include "aios.keycloak.url" . }}
   {{- $keycloakInternalUrl := $keycloakUrl }}
-  {{- if $kubePrometheusStack.grafana.useInternalUrlForOauth }}
+  {{- if .Values.kubeprometheusstack.grafana.useInternalUrlForOauth }}
   {{- $keycloakInternalUrl = include "aios.keycloak.url-internal" . }}
   {{- end }}
   GF_SERVER_ROOT_URL: {{ include "aios.grafana.url" . }}
