@@ -88,7 +88,7 @@ spec:
             - name: AIOS_SECURITY_KEYCLOAK_AUTH_SERVER_URL
               valueFrom:
                 configMapKeyRef:
-                  name: {{ include "aios.fullname" . }}-urls
+                  name: {{ .Values.app.urlsConfigMapName }}
                   key: keycloak-internal-url
         {{- end }}
         {{- if .Values.app.waitForGrafana }}
@@ -103,7 +103,7 @@ spec:
             - name: AIOS_GRAFANA_URL
               valueFrom:
                 configMapKeyRef:
-                  name: {{ include "aios.fullname" . }}-urls
+                  name: {{ .Values.app.urlsConfigMapName }}
                   key: grafana-internal-url
         {{- end }}
       {{- end }}
@@ -154,6 +154,11 @@ spec:
                 fieldRef:
                   apiVersion: v1
                   fieldPath: "metadata.namespace"
+            - name: AIOS_AKKA_DISCOVERY_POD_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: "metadata.name"
             - name: AIOS_AKKA_MGMT_PORT
               value: "8558"
             {{- if not .Values.autoscaling.enabled }}
@@ -174,6 +179,10 @@ spec:
                   fieldPath: status.podIP
             - name: AIOS_AKKA_REMOTE_BIND_PORT
               value: "25520"
+            - name: CONFIG_FORCE_akka_extensions_0
+              value: "akka.rollingupdate.kubernetes.PodDeletionCost"
+            - name: CONFIG_FORCE_akka_extensions_1
+              value: "akka.rollingupdate.kubernetes.AppVersionRevision"
             {{- if .Values.app.admin.existingSecret }}
             - name: AIOS_SECURITY_ADMIN_PASSWORD
               valueFrom:
@@ -185,14 +194,14 @@ spec:
             - name: AIOS_SECURITY_KEYCLOAK_AUTH_SERVER_URL
               valueFrom:
                 configMapKeyRef:
-                  name: {{ include "aios.fullname" . }}-urls
+                  name: {{ .Values.app.urlsConfigMapName }}
                   key: keycloak-internal-url
             {{- end }}
             {{- if not (hasKey .Values.app.config "AIOS_SECURITY_KEYCLOAK_EXTERNAL_AUTH_SERVER_URL") }}
             - name: AIOS_SECURITY_KEYCLOAK_EXTERNAL_AUTH_SERVER_URL
               valueFrom:
                 configMapKeyRef:
-                  name: {{ include "aios.fullname" . }}-urls
+                  name: {{ .Values.app.urlsConfigMapName }}
                   key: keycloak-url
             {{- end }}
             {{- if and .Values.keycloak.enabled .Values.keycloak.passwordsSecretName }}
@@ -235,11 +244,23 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.rabbitmq.auth.existingPasswordSecret }}
                   key: rabbitmq-password
+                {{- if .Values.ondemand.enabled }}
+            - name: AIOS_ONDEMAND_BROKER_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.rabbitmq.auth.existingPasswordSecret }}
+                  key: rabbitmq-user
+            - name: AIOS_ONDEMAND_BROKER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.rabbitmq.auth.existingPasswordSecret }}
+                  key: rabbitmq-password
+                {{- end }}
               {{- end }}
             - name: AIOS_UI_AMQP_URL
               valueFrom:
                 configMapKeyRef:
-                  name: {{ printf "%s-urls" (include "aios.fullname" .) }}
+                  name: {{ .Values.app.urlsConfigMapName }}
                   key: amqp-url
             {{- end }}
             - name: AIOS_K8S_NAMESPACE
@@ -271,18 +292,18 @@ spec:
             - name: AIOS_GRAFANA_EXTERNAL_URL
               valueFrom:
                 configMapKeyRef:
-                  name: {{ include "aios.fullname" . }}-urls
+                  name: {{ .Values.app.urlsConfigMapName }}
                   key: grafana-url
               {{- end }}
             - name: AIOS_GRAFANA_URL
               valueFrom:
                 configMapKeyRef:
-                  name: {{ include "aios.fullname" . }}-urls
+                  name: {{ .Values.app.urlsConfigMapName }}
                   key: grafana-internal-url
             - name: AIOS_UI_GRAFANA_URL
               valueFrom:
                 configMapKeyRef:
-                  name: {{ include "aios.fullname" . }}-urls
+                  name: {{ .Values.app.urlsConfigMapName }}
                   key: grafana-url
             {{- end }}
             {{- if and .Values.lokistack.enabled .Values.lokistack.loki.enabled }}
@@ -290,14 +311,14 @@ spec:
             - name: AIOS_GRAFANA_LOKI_URL
               valueFrom:
                 configMapKeyRef:
-                  name: {{ include "aios.fullname" . }}-urls
+                  name: {{ .Values.app.urlsConfigMapName }}
                   key: loki-internal-url
               {{- end }}
               {{- if not (hasKey .Values.app.config "AIOS_LOKI_URL") }}
             - name: AIOS_LOKI_URL
               valueFrom:
                 configMapKeyRef:
-                  name: {{ include "aios.fullname" . }}-urls
+                  name: {{ .Values.app.urlsConfigMapName }}
                   key: loki-internal-url
               {{- end }}
             {{- end }}
@@ -306,7 +327,7 @@ spec:
             - name: AIOS_PROMETHEUS_URL
               valueFrom:
                 configMapKeyRef:
-                  name: {{ include "aios.fullname" . }}-urls
+                  name: {{ .Values.app.urlsConfigMapName }}
                   key: prometheus-internal-url
               {{- end }}
             {{- end }}

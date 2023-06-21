@@ -1,0 +1,32 @@
+{{- if and .Values.ondemand.enabled .Values.ondemand.podMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: {{ .Values.ondemand.service.name }}
+  {{- if .Values.ondemand.podMonitor.namespace }}
+  namespace: {{ .Values.ondemand.podMonitor.namespace }}
+  {{- else }}
+  namespace: {{ .Release.Namespace }}
+  {{- end }}
+  labels:
+    {{- include "ondemand.labels" . | nindent 4 }}
+    release: {{ $.Release.Name | quote }} # to be matched by podMonitorSelectorNilUsesHelmValues of the kube-prometheus-stack
+    {{- range $key, $val := .Values.ondemand.podMonitor.additionalLabels }}
+    {{ $key }}: {{ $val | quote }}
+    {{- end }}
+spec:
+  podMetricsEndpoints:
+    - path: {{ .Values.ondemand.podMonitor.path }}
+      port: {{ .Values.ondemand.podMonitor.port }}
+      interval: {{ .Values.ondemand.podMonitor.interval | quote }}
+  podTargetLabels:
+    {{- range .Values.ondemand.podMonitor.additionalPodTargetLabels }}
+    - {{ . }}
+    {{- end }}
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace }}
+  selector:
+    matchLabels:
+      {{- include "ondemand.selectorLabels" . | nindent 6 }}
+{{- end }}

@@ -38,7 +38,7 @@ helm.sh/chart: {{ include "aios.chart" . }}
 aios.dev/tenant-id: AIOS
 {{ include "aios.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
-app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+app.kubernetes.io/version: {{ .Chart.AppVersion | trunc 63 | trimSuffix "." | quote }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
@@ -154,4 +154,32 @@ AIOS Prometheus URL
 */}}
 {{- define "aios.prometheus.url" }}
 {{- printf "http://%s:%s" (printf "%s-%s-prometheus" .Release.Name .Values.kubeprometheusstack.nameOverride) ((int .Values.kubeprometheusstack.prometheus.service.port | toString)) }}
+{{- end }}
+
+{{/*
+Config checksum (on-demand)
+*/}}
+{{- define "ondemand.configChecksum" }}
+checksum/config: {{ cat (keys .Values.ondemand.config | sortAlpha | toStrings | join "_") (values .Values.ondemand.config | sortAlpha | toStrings | join "_") | sha256sum }}
+{{- end }}
+
+{{/*
+Common labels (on-demand)
+*/}}
+{{- define "ondemand.labels" -}}
+helm.sh/chart: {{ include "aios.chart" . }}
+aios.dev/tenant-id: AIOS
+{{ include "ondemand.selectorLabels" . }}
+{{- if .Chart.AppVersion }}
+app.kubernetes.io/version: {{ .Chart.AppVersion | trunc 63 | trimSuffix "." | quote }}
+{{- end }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end }}
+
+{{/*
+Selector labels (on-demand)
+*/}}
+{{- define "ondemand.selectorLabels" -}}
+app.kubernetes.io/name: {{ .Values.ondemand.service.name }}
+app.kubernetes.io/instance: {{ .Values.ondemand.service.name }}
 {{- end }}

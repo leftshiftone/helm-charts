@@ -1,0 +1,25 @@
+{{- if .Values.ondemand.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.ondemand.service.name }}-conf
+  labels:
+  {{- include "ondemand.labels" . | nindent 4 }}
+data:
+  # AMQP broker config
+  {{- if .Values.rabbitmq.enabled }}
+    {{- if not (hasKey .Values.ondemand.config "RMQ_HOST") }}
+  RMQ_HOST: "{{ .Release.Name }}-rabbitmq"
+    {{- end }}
+    {{- if not (hasKey .Values.ondemand.config "RMQ_PORT") }}
+  RMQ_PORT: "{{ .Values.rabbitmq.service.ports.amqp }}"
+    {{- end }}
+    {{- if not (hasKey .Values.ondemand.config "RMQ_VHOST") }}
+  RMQ_VHOST: "aios"
+    {{- end }}
+  {{- end }}
+  # Dynamic config
+  {{- range $key, $val := .Values.ondemand.config }}
+  {{ $key }}: {{ $val | quote }}
+  {{- end }}
+{{- end }}

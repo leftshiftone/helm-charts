@@ -17,5 +17,8 @@ dependencies:
 - name: grafana-agent-operator
   repository: https://grafana.github.io/helm-charts
   version: 0.2.12
-digest: sha256:7d60f5123c06bf26c42209190b9380fd7955c9b4e73c7461b9598b448bedde40
-generated: "2023-02-17T12:10:43.748855647+01:00"
+- name: keda
+  repository: https://kedacore.github.io/charts
+  version: 2.10.2
+digest: sha256:189565509cf9435097b3321d5caa0cd6fc7dcaccffe6a75d8f89e4be28ac2119
+generated: "2023-05-24T10:22:47.258217519+02:00"

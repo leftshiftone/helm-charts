@@ -42,6 +42,25 @@ data:
   AIOS_AMQP_PORT: {{ .Values.rabbitmq.service.ports.amqp | quote }}
     {{- end }}
   {{- end }}
+  # On-demand gateway config
+  {{- if .Values.ondemand.enabled }}
+    {{- if not (hasKey .Values.app.config "AIOS_ONDEMAND_ENABLED") }}
+  AIOS_ONDEMAND_ENABLED: "true"
+    {{- end }}
+    {{- if not (hasKey .Values.app.config "AIOS_ONDEMAND_NAME") }}
+  AIOS_ONDEMAND_NAME: "{{ .Values.ondemand.service.name}}"
+    {{- end }}
+    {{- if not (hasKey .Values.app.config "AIOS_ONDEMAND_CONFIG_NAME") }}
+  AIOS_ONDEMAND_CONFIG_NAME: "{{ .Values.ondemand.configMapName }}"
+    {{- end }}
+    {{- if not (hasKey .Values.app.config "AIOS_ONDEMAND_CONFIG_FILE_NAME") }}
+  AIOS_ONDEMAND_CONFIG_FILE_NAME: "{{ .Values.ondemand.configMapKey }}"
+    {{- end }}
+    {{- if not (hasKey .Values.app.config "AIOS_ONDEMAND_BROKER_URL") }}
+  AIOS_ONDEMAND_BROKER_URL: "amqp://{{ .Release.Name }}-rabbitmq.{{ .Release.Namespace }}:{{ .Values.rabbitmq.service.ports.amqp }}/aios"
+    {{- end }}
+  {{- end }}
+
   # Grafana config
   {{- if and .Values.kubeprometheusstack.enabled .Values.kubeprometheusstack.grafana.enabled }}
     {{- if not (hasKey .Values.app.config "AIOS_GRAFANA_ENABLED") }}
@@ -81,6 +100,13 @@ data:
   # Kubernetes config
   {{- if not (hasKey .Values.app.config "AIOS_K8S_ENABLED") }}
   AIOS_K8S_ENABLED: "true"
+  {{- end }}
+  {{- if not (hasKey .Values.app.config "AIOS_K8S_MONITORING_ENABLED") }}
+    {{- if or .Values.kubeprometheusstack.enabled .Values.grafanaagentoperator.enabled }}
+  AIOS_K8S_MONITORING_ENABLED: "true"
+    {{- else }}
+  AIOS_K8S_MONITORING_ENABLED: "false"
+    {{- end }}
   {{- end }}
   {{- if and (not (hasKey .Values.app.config "AIOS_K8S_SERVICE_ACCOUNT_NAME")) .Values.serviceAccount.create}}
   AIOS_K8S_SERVICE_ACCOUNT_NAME: {{ .Values.serviceAccount.name | default (include "aios.serviceAccountName" .) | quote }}

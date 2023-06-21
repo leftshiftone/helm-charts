@@ -28,23 +28,21 @@ app:
   smtpCredentialsSecretName: ""
   smtpConfigSecretName: aios-smtp-config
   urlsConfigMapName: aios-urls
+
   waitForDatabase: true
   waitForAmqp: true
   waitForKeycloak: true
   waitForGrafana: true
 
 replicaCount: 1
-
 image:
   repository: 007098893018.dkr.ecr.eu-central-1.amazonaws.com/aios
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
   pullPolicy: IfNotPresent
-
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
-
 serviceAccount:
   # Specifies whether a service account should be created
   create: true
@@ -55,15 +53,76 @@ serviceAccount:
   name: ""
   # Image pull secrets to use with this service account (is needed if certain registry credentials are needed for pulling the AIOS image).
   imagePullSecrets: []
-
+  # If no cluster wide permissions are possible, keep in mind that a specific namespace for services (which is other than the namespace where AIOS is installed) cannot be used because the AIOS needs permissions to read resources in a different namespace which is not possible without a cluster role.
+  installClusterWidePermissions: true
+  # To customize the permissions for the cluster role, set the permissions applicable to the service account. These permissions are used to handle the services managed with AIOS and are only applicable when the installClusterWidePermissions is true (namespace mode is PER_TENANT).
+  # Attention: do not change this unless you know what you are doing. The default permissions can be found in the template file templates/serviceaccount-clusterrole-for-namespace-mode.yaml.
+  clusterRoleRules: []
+    # - apiGroups:
+    #     - ""
+    #   resources:
+    #     - "namespaces"
+    #   verbs:
+    #     - "get"
+    #     - "watch"
+    #     - "list"
+    #     - "create"
+    #     - "delete"
+    #     - "update"
+    #     - "patch"
+    # - apiGroups:
+    #     - "rbac.authorization.k8s.io"
+    #   resources:
+    #     - "roles"
+    #     - "rolebindings"
+    #   verbs:
+    #     - "get"
+    #     - "watch"
+    #     - "list"
+    #     - "create"
+    #     - "delete"
+    #     - "deletecollection"
+    #     - "update"
+    #     - "patch"
+  # To customize the permissions for the role, set the permissions applicable to the service account. These permissions are used to handle the services managed with AIOS and are only applicable when the installClusterWidePermissions is false (namespace mode is CUSTOM and the namespace for services is equal to the AIOS installed namespace).
+  # Attention: do not change this unless you know what you are doing. The default permissions can be found in the template file templates/serviceaccount-role-for-namespace-mode.yaml.
+  roleRules: []
+    # - apiGroups:
+    #     - "rbac.authorization.k8s.io"
+    #   resources:
+    #     - "roles"
+    #     - "rolebindings"
+    #   verbs:
+    #     - "get"
+    #     - "watch"
+    #     - "list"
+    #     - "create"
+    #     - "delete"
+    #     - "deletecollection"
+    #     - "update"
+    #     - "patch"
+    # - apiGroups:
+    #     - ""
+    #   resources:
+    #     - "configmaps"
+    #     - "secrets"
+    #     - "pods"
+    #     - "services"
+    #     - "persistentvolumeclaims"
+    #   verbs:
+    #     - "get"
+    #     - "watch"
+    #     - "list"
+    #     - "create"
+    #     - "delete"
+    #     - "deletecollection"
+    #     - "update"
+    #     - "patch"
 podAnnotations: {}
-
 podLabels:
   aios.dev/tenant-id: "AIOS"
-
 podSecurityContext: {}
   # fsGroup: 2000
-
 securityContext: {}
   # capabilities:
   #   drop:
@@ -71,11 +130,9 @@ securityContext: {}
   # readOnlyRootFilesystem: true
   # runAsNonRoot: true
   # runAsUser: 1000
-
 service:
   type: ClusterIP
   port: 80
-
 ingress:
   enabled: false
   className: ""
@@ -96,7 +153,6 @@ ingress:
   #  - secretName: aios-tls
   #    hosts:
   #      - aios.local
-
 podMonitor:
   enabled: false
   path: /metrics/prometheus
@@ -110,7 +166,6 @@ podMonitor:
     - app_kubernetes_io_instance
     - app_kubernetes_io_name
     - app_kubernetes_io_version
-
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little
@@ -122,14 +177,12 @@ resources: {}
   # requests:
   #   cpu: 100m
   #   memory: 1G
-
 autoscaling:
   enabled: false
   minReplicas: 1
   maxReplicas: 9
-  targetCPUUtilizationPercentage: 80
+  targetCPUUtilizationPercentage: 70
   # targetMemoryUtilizationPercentage: 80
-
 livenessProbe:
   httpGet:
     path: /health
@@ -144,7 +197,6 @@ startupProbe:
     port: http
   failureThreshold: 60
   periodSeconds: 5
-
 extraVolumeMounts: []
   # - mountPath: /debug
   #   name: host
@@ -154,12 +206,100 @@ extraVolumes: []
   #   hostPath:
   #     path: /host
   #     type: Directory
-
 nodeSelector: {}
-
 tolerations: []
-
 affinity: {}
+
+
+ondemand:
+  enabled: false # Make sure KEDA is also deployed when enabling this (also available in this chart).
+  configMapName: aios-ondemand-gateway
+  configMapKey: gekko.yaml
+  config:
+    LOG_LEVEL: "info"
+    CONFIG_PATH: "/etc/gekko/config/gekko.yaml"
+    GEKKO_HEALTHZ_INTERVAL: "1000"
+    GEKKO_BUFFER_TIMEOUT_MS: "30000"
+    GEKKO_TCP_IDLE_TIMEOUT_MS: "300000"
+  replicaCount: 1
+  image:
+    repository: 007098893018.dkr.ecr.eu-central-1.amazonaws.com/aios-ondemand-gateway
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: ""
+    pullPolicy: IfNotPresent
+  imagePullSecrets: []
+  podAnnotations: {}
+  podLabels:
+    aios.dev/tenant-id: "AIOS"
+  podSecurityContext: {}
+    # fsGroup: 2000
+  securityContext: {}
+    # capabilities:
+    #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
+  service:
+    name: aios-ondemand-gateway
+    type: ClusterIP
+    port: 80
+  podMonitor:
+    enabled: false
+    path: /metrics
+    port: http
+    namespace: ""
+    interval: 10s
+    additionalLabels: {}
+      # Enable by setting it to the release name in order to be picked up by prometheus.
+      # release: aios
+    additionalPodTargetLabels:
+      - aios_dev_tenant_id
+      - application
+      - app_kubernetes_io_instance
+      - app_kubernetes_io_name
+      - app_kubernetes_io_version
+  resources: {}
+    # limits:
+    #   cpu: 1000m
+    #   memory: 500M
+    # requests:
+    #   cpu: 100m
+    #   memory: 500M
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 9
+    targetCPUUtilizationPercentage: 70
+    # targetMemoryUtilizationPercentage: 80
+  livenessProbe:
+    httpGet:
+      path: /health
+      port: http
+  readinessProbe:
+    httpGet:
+      path: /health
+      port: http
+  startupProbe:
+    httpGet:
+      path: /health
+      port: http
+    failureThreshold: 60
+    periodSeconds: 5
+  extraVolumeMounts:
+    - name: config
+      mountPath: "/etc/gekko/config"
+      readOnly: true
+      # subPath must not be used because config file refresh will not work with it (see https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/#mounted-configmaps-are-updated-automatically)
+  extraVolumes:
+    - name: config
+      configMap:
+        name: aios-ondemand-gateway
+        defaultMode: 0644
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
 
 
 # Deploy postgres with the included helm chart from https://artifacthub.io/packages/helm/bitnami/postgresql
@@ -633,6 +773,7 @@ kubeprometheusstack:
       - aios-loadbalancer.json
       - aios-logs.json
       - aios-metrics.json
+      - aios-ondemand.json
       - aios-services.json
       - aios-storage.json
     aiosConfig: aios-grafana-config
@@ -878,6 +1019,7 @@ lokistack:
   prometheus:
     enabled: false
 
+
 # Deploy loki with the included helm chart from https://artifacthub.io/packages/helm/grafana/grafana-agent-operator
 grafanaagentoperator:
   enabled: false
@@ -960,3 +1102,54 @@ grafanaagentoperator:
     probeSelector:
       matchLabels:
         app.kubernetes.io/instance: aios
+
+
+# Deploy keda with the included helm chart from https://artifacthub.io/packages/helm/kedacore/keda
+keda:
+  enabled: false
+  image:
+    pullPolicy: IfNotPresent
+  crds:
+    install: true
+  watchNamespace: ""
+  logging:
+    operator:
+      level: info # debug, info or error
+  resources:
+    operator: {}
+      # limits:
+      #   cpu: 1000m
+      #   memory: 500M
+      # requests:
+      #   cpu: 100m
+      #   memory: 500M
+    metricServer: {}
+      # limits:
+      #   cpu: 1000m
+      #   memory: 500M
+      # requests:
+      #   cpu: 100m
+      #   memory: 500M
+    webhooks: {}
+      # limits:
+      #   cpu: 100m
+      #   memory: 100M
+      # requests:
+      #   cpu: 10m
+      #   memory: 10M
+  prometheus:
+    metricServer:
+      enabled: false
+      serviceMonitor:
+        enabled: false
+        jobLabel:
+        targetLabels: []
+        podTargetLabels: []
+        port: metrics
+        targetPort:
+        interval:
+        scrapeTimeout:
+        relabellings: []
+        additionalLabels: {}
+  nodeSelector: {}
+  tolerations: []

@@ -1,0 +1,18 @@
+{{- if .Values.ondemand.enabled }}
+{{- $existingConfig := (lookup "v1" "ConfigMap" .Release.Namespace .Values.ondemand.configMapName) }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.ondemand.configMapName }}
+  labels:
+    app.kubernetes.io/name: "{{ .Values.ondemand.service.name }}"
+    app.kubernetes.io/managed-by: "AIOS"
+data:
+{{- if $existingConfig }}
+  {{- $existingData := $existingConfig.data }}
+  {{ .Values.ondemand.configMapKey }}: |
+    {{- get $existingData .Values.ondemand.configMapKey | nindent 4 }}
+{{- else }}
+  {{ .Values.ondemand.configMapKey }}: |
+{{- end }}
+{{- end }}

@@ -1,0 +1,97 @@
+{{- if .Values.ondemand.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.ondemand.service.name }}
+  labels:
+    {{- include "ondemand.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.ondemand.autoscaling.enabled }}
+  replicas: {{ .Values.ondemand.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "ondemand.selectorLabels" . | nindent 6 }}
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        {{- with .Values.ondemand.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- include "ondemand.configChecksum" . | nindent 8 }}
+      labels:
+        {{- with .Values.ondemand.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        application: {{ .Values.ondemand.service.name }}
+        {{- include "ondemand.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.ondemand.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "aios.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.ondemand.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Values.ondemand.service.name }}
+          securityContext:
+            {{- toYaml .Values.ondemand.securityContext | nindent 12 }}
+          image: "{{ .Values.ondemand.image.repository }}:{{ .Values.ondemand.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.ondemand.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            {{- toYaml .Values.ondemand.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.ondemand.readinessProbe | nindent 12 }}
+          startupProbe:
+            {{- toYaml .Values.ondemand.startupProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.ondemand.resources | nindent 12 }}
+          envFrom:
+            - configMapRef:
+                name: {{ .Values.ondemand.service.name }}-conf
+          env:
+            {{- if .Values.rabbitmq.enabled }}
+              {{- if .Values.rabbitmq.auth.existingPasswordSecret }}
+            - name: RMQ_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.rabbitmq.auth.existingPasswordSecret }}
+                  key: rabbitmq-user
+            - name: RMQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.rabbitmq.auth.existingPasswordSecret }}
+                  key: rabbitmq-password
+              {{- end }}
+            {{- end }}
+          {{- if .Values.ondemand.extraVolumeMounts }}
+          volumeMounts:
+            {{- toYaml .Values.ondemand.extraVolumeMounts | nindent 12 }}
+          {{- end }}
+      {{- if .Values.ondemand.extraVolumes }}
+      volumes:
+        {{- toYaml .Values.ondemand.extraVolumes | nindent 8 }}
+      {{- end }}
+      {{- with .Values.ondemand.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.ondemand.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.ondemand.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

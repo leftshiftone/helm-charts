@@ -1,0 +1,18 @@
+{{- if .Values.ondemand.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.ondemand.service.name }}
+  labels:
+    application: {{ .Values.ondemand.service.name }}
+    {{- include "ondemand.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.ondemand.service.type }}
+  ports:
+    - port: {{ .Values.ondemand.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "ondemand.selectorLabels" . | nindent 4 }}
+{{- end }}
